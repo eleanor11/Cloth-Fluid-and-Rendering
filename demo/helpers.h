@@ -688,7 +688,9 @@ void CreateSpringGrid(Vec3 lower, int dx, int dy, int dz, float radius, int phas
 				g_velocities.push_back(velocity);
 				g_phases.push_back(phase);
 
-				g_uvs.push_back(Vec3((float)x / dx * 4, (float)y / dy * 4, 0.0));
+				//g_uvs.push_back(Vec3((float)x / dx * 8, (float)y / dy * 8, 0.0));
+				//g_uvs.push_back(Vec3((float)x / dx * 4, (float)y / dy * 4, 0.0));
+				g_uvs.push_back(Vec3((float)x / dx, (float)y / dy, 0.0));
 
 				if (x > 0 && y > 0)
 				{

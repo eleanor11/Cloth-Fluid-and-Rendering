@@ -30,6 +30,7 @@
 #include "core/mesh.h"
 #include "core/tga.h"
 
+
 #define cudaCheck(x) { cudaError_t err = x; if (err != cudaSuccess) { printf("Cuda error: %d in %s at %s:%d\n", err, #x, __FILE__, __LINE__); assert(0); } }
 
 static float gSpotMin = 0.95f;
@@ -244,9 +245,6 @@ uniform vec4 fogColor;
 
 uniform sampler2D tex;
 
-uniform sampler2D bitMap;
-uniform sampler2D normalMap;
-
 uniform sampler2DShadow shadowTex;
 uniform vec2 shadowTaps[12];
 
@@ -255,7 +253,24 @@ uniform bool sky;
 uniform bool grid;
 uniform bool texture;
 
+/*added by eleanor*/
+uniform sampler2D bitMap;
+uniform sampler2D normalMap;
 
+uniform bool normal;
+
+uniform int shaderMode;
+
+uniform float kd;
+uniform float a;
+uniform float fresnelPowRow;
+uniform float fresnelPowCol;
+
+uniform bool clothColor;
+uniform vec3 clothColorRow;
+uniform vec3 clothColorCol;
+
+/*added end*/
 
 float sqr(float x) { return x*x; }
 
@@ -312,56 +327,59 @@ float saturate(float x) {
 	return clamp(x, 0.0, 1.0);
 }
 
-vec3 normalShader(float3 normal, float bit) {
+vec3 normalShader(vec3 cr, vec3 cc, float3 normal, float bit) {
 
-	vec3 color = vec3(0.5, 0.5, 0.5);
+	//vec3 colorRow = vec3(0.7, 0.4, 0.4);
+	//vec3 colorCol = vec3(0.7, 0.4, 0.4);
 
 	float difLight = abs(dot(normal, lightDir));
 
 	if (bit == 0) {
-		color = vec3(0.7, 0.4, 0.4) *difLight;
+		color = cr * difLight;
 	}
 	else if (bit == 1) {
-		color = vec3(0.7, 0.4, 0.4) *difLight;
+		color = cc * difLight;
 	}
 
 	return color;
 }
 
-vec3 clothShader(float3 normal, float bit) {
-	vec3 color = vec3(0.5, 0.5, 0.5);
+vec3 clothShader(vec3 cr, vec3 cc, float3 normal, float bit) {
+
+	//vec3 colorRow = vec3(0.7, 0.4, 0.4);
+	//vec3 colorCol = vec3(0.7, 0.4, 0.4);
+
 
 	float PI = 3.1415926535;
-	float kd = 0.5;
-	float a = 0.5;
 
 	float3 t = float3(0.0, 0.0, 0.0);
 	float fresnelPow = 0.0;
 
 	if (bit == 0){
 		t = float3(1.0, 0.0, 0.0);
-		fresnelPow = 3.0;
-		color = vec3(0.7, 0.4, 0.4);
+		fresnelPow = fresnelPowRow;
+		color = cr;
 	}
 	else if (bit == 1) {
 		t = float3(0.0, 1.0, 0.0);
-		fresnelPow = 3.0;
-		color = vec3(0.7, 0.4, 0.4);
+		fresnelPow = fresnelPowCol;
+		color = cc;
 	}
 
-	vec3 viewDir = gl_TexCoord[7];
+	vec3 lDir = normalize(gl_TexCoord[3].xyz - (lightPos));
+	vec3 vDir = normalize(gl_ModelViewMatrixInverse[3].xyz - gl_TexCoord[3].xyz);
 
-	float LdotT = dot(lightDir, t);
-	float RdotT = dot(viewDir, t);
-	float LdotN = dot(lightDir, normal);
-	float RdotN = dot(viewDir, normal);
+	float LdotT = dot(lDir, t);
+	float RdotT = dot(vDir, t);
+	float LdotN = dot(lDir, normal);
+	float RdotN = dot(vDir, normal);
 
 	float thetaI = abs(PI / 2 - acos(LdotT));
 	float thetaR = abs(PI / 2 - acos(RdotT));
 
-	float3 n1 = cross(lightDir, t);
+	float3 n1 = cross(lDir, t);
 	float phiI = abs(PI / 2 - acos(dot(n1, normal)));
-	float3 n2 = cross(viewDir, t);
+	float3 n2 = cross(vDir, t);
 	float phiR = abs(PI / 2 - acos(dot(n2, normal)));
 
 	float phiD = phiI - phiR;
@@ -419,6 +437,9 @@ void main()
 	//vec3 marble = texture2D(marbleTex, 	gl_TexCoord[5].xy*200.0);
 	//color *= marble;
 
+	vec3 cr = color;
+	vec3 cc = color;
+
 	if (texture)
 	{
 		
@@ -437,20 +458,28 @@ void main()
 		//	color.y = 1.0;
 		//}
 
-		//color = texture2D(normalMap, gl_TexCoord[5].xy).xyz;
 
-		//color = float3(0.3, 0.3, 0.3);
+		color = texture2D(tex, gl_TexCoord[5].xy).xyz;
+		cr = color;
+		cc = color;
+	}	
+	else if (clothColor) {
+		cr = clothColorRow;
+		cc = clothColorCol;
+	}
 
+	if (normal) {
 		float3 normal = normalize(texture2D(normalMap, gl_TexCoord[5].xy).xyz * 2 - 1);
 		float bit = texture2D(bitMap, gl_TexCoord[5].xy).x;
 
-		
-		color = normalShader(normal, bit);
+		if (shaderMode == 1) {
+			color = clothShader(cr, cc, normal, bit);
+		}
+		else {
+			color = normalShader(cr, cc, normal, bit);
+		}
 
-		//color = clothShader(normal, bit);
-
-		
-	}	
+	}
  
 	
 	// direct light term
@@ -700,10 +729,10 @@ void DrawSky()
 
 /*added by eleanor*/
 
-const int nTex = 2;
+const int nTex = 3;
 GLuint myTex[nTex];
 
-AUX_RGBImageRec *LoadBMP(char *Filename){
+AUX_RGBImageRec *LoadBMP(const char *Filename){
 	FILE *File = NULL;
 
 	if (!Filename){
@@ -717,7 +746,7 @@ AUX_RGBImageRec *LoadBMP(char *Filename){
 
 	return NULL;
 }
-int LoadGLTextures(char *name, int idx){
+int LoadGLTextures(const char *name, int idx){
 
 	int Status = FALSE;
 
@@ -752,8 +781,17 @@ int LoadGLTextures(char *name, int idx){
 	return Status;
 
 }
+bool loadNormalMap(std::string name) {
+	std::string path = "../../data/textures/";
+	std::string bname = path + "b" + name + ".bmp";
+	std::string nname = path + "n" + name + ".bmp";
+	bool result = LoadGLTextures(bname.c_str(), 1);
+	result = result && LoadGLTextures(nname.c_str(), 2);
 
-void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, int colorIndex, float expand, bool twosided, bool smooth)
+	return result;
+}
+
+void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, int cshader_mode, float cshader_kd, float cshader_a, float cshader_fresnelPowRow, float cshader_fresnelPowCol, Vec3 colorRow, Vec3 colorCol, float expand, bool twosided, bool smooth)
 {
 	if (!numTris)
 		return;
@@ -773,33 +811,65 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 		glUniform1f(uExpand, expand);
 	}
 
-	bool texFlag = LoadGLTextures("../../data/textures/bCreprDeChine_512.bmp", 0);
-	LoadGLTextures("../../data/textures/nCreprDeChine_512.bmp", 1);
-	//texFlag = false;
+	bool texFlag = LoadGLTextures("../../data/textures/mycloth.bmp", 0);
+	//bool normalFlag = loadNormalMap("LinenPlain");
+	//bool normalFlag = loadNormalMap("CreprDeChine");
+	//bool normalFlag = loadNormalMap("PolyesterStainCharmeuseFront");
+	bool normalFlag = loadNormalMap("PolyesterStainCharmeuseBack");
 	
 	if (texFlag) {
 
 		glUseProgram(s_diffuseProgram);
-		glUniform1i(glGetUniformLocation(s_diffuseProgram, "texture"), 1);
-		
-		GLint uTexB = glGetUniformLocation(s_diffuseProgram, "bitMap");
-		glUniform1i(uTexB, 1);
-		GLint uTexN = glGetUniformLocation(s_diffuseProgram, "normalMap");
-		glUniform1i(uTexN, 2);
+		glUniform1i(glGetUniformLocation(s_diffuseProgram, "texture"), 0);
 
+		GLint uTex = glGetUniformLocation(s_diffuseProgram, "tex");
+		glUniform1i(uTex, 1);
 
 		glActiveTexture(GL_TEXTURE1);
 		glEnable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, myTex[0]);
+	}
+
+	if (normalFlag) {
+		glUseProgram(s_diffuseProgram);
+		glUniform1i(glGetUniformLocation(s_diffuseProgram, "normal"), 1);
+
+		GLint uTexB = glGetUniformLocation(s_diffuseProgram, "bitMap");
+		glUniform1i(uTexB, 2);
+		GLint uTexN = glGetUniformLocation(s_diffuseProgram, "normalMap");
+		glUniform1i(uTexN, 3);
 
 		glActiveTexture(GL_TEXTURE2);
 		glEnable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, myTex[1]);
 
+		glActiveTexture(GL_TEXTURE3);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, myTex[2]);
+
 	}
 
-	//glColor3fv(gColors[colorIndex + 1] * 1.5f);
-	//glSecondaryColor3fv(gColors[colorIndex] * 1.5f);
+	glUniform1i(glGetUniformLocation(s_diffuseProgram, "shaderMode"), cshader_mode);
+	switch (cshader_mode)
+	{
+	case 0:
+		break;
+	case 1:
+		glUniform1f(glGetUniformLocation(s_diffuseProgram, "kd"), cshader_kd);
+		glUniform1f(glGetUniformLocation(s_diffuseProgram, "a"), cshader_a);
+		glUniform1f(glGetUniformLocation(s_diffuseProgram, "fresnelPowRow"), cshader_fresnelPowRow);
+		glUniform1f(glGetUniformLocation(s_diffuseProgram, "fresnelPowCol"), cshader_fresnelPowCol);
+		break;
+
+	default:
+		break;
+	}
+	glUniform1i(glGetUniformLocation(s_diffuseProgram, "clothColor"), 1);
+	glUniform3fv(glGetUniformLocation(s_diffuseProgram, "clothColorRow"), 1, colorRow);
+	glUniform3fv(glGetUniformLocation(s_diffuseProgram, "clothColorCol"), 1, colorCol);
+
+	//glColor3fv(colorRow);
+	//glSecondaryColor3fv(colorCol);
 	
 
 	glVerify(glEnableClientState(GL_VERTEX_ARRAY));
@@ -831,13 +901,17 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 	if (texFlag) {
 		glActiveTexture(GL_TEXTURE1);
 		glDisable(GL_TEXTURE_2D);
+
+		glUniform1i(glGetUniformLocation(s_diffuseProgram, "texture"), 0);
+
+	}
+	if (normalFlag) {
 		glActiveTexture(GL_TEXTURE2);
 		glDisable(GL_TEXTURE_2D);
+		glActiveTexture(GL_TEXTURE3);
+		glDisable(GL_TEXTURE_2D);
 
-		GLint uTexture = glGetUniformLocation(s_diffuseProgram, "texture");
-		glUniform1i(uTexture, 0);
-
-
+		glUniform1i(glGetUniformLocation(s_diffuseProgram, "normal"), 0);
 	}
 }
 

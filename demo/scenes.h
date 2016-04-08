@@ -3886,5 +3886,34 @@ public:
 		g_drawEllipsoids = true;
 	}
 
+	virtual void DoGui(){
+		imguiLabel("Shader");
+
+		if (imguiCheck("Normal Shader", bool(g_shaderMode == 0))) {
+			g_shaderMode = 0;
+		}
+		if (imguiCheck("Cloth Shader", bool(g_shaderMode == 1))) {
+			g_shaderMode = 1;
+		}
+
+		if (g_shaderMode == 1) {
+			imguiSlider("Fresnel Power Row", &g_cshader_fresnelPowRow, 0.1, 5.0, 0.5);
+			imguiSlider("Fresnel Power Col", &g_cshader_fresnelPowCol, 0.1, 5.0, 0.5);
+			imguiSlider("Kd", &g_cshader_kd, 0.0, 1.0, 0.1);
+			imguiSlider("A", &g_cshader_a, 0.0, 1.0, 0.1);
+		}
+
+
+		imguiLabel("Cloth Color");
+
+		imguiSlider("R", &g_clothColorRow.x, 0.0, 1.0, 0.1);
+		imguiSlider("G", &g_clothColorRow.y, 0.0, 1.0, 0.1);
+		imguiSlider("B", &g_clothColorRow.z, 0.0, 1.0, 0.1);
+		g_clothColorCol = g_clothColorRow;
+
+		imguiSeparatorLine();
+
+	}
+
 	bool mViscous;
 };
