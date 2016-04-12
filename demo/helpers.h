@@ -662,6 +662,105 @@ void CreateSDF(const char* meshFile, float scale, Vec3 lower, float expand=0.0f)
 	}
 }
 
+
+/*added by eleanor*/
+void CreateSDF2(const char* meshFile, float scale, Vec3 lower, float expand = 0.0f)
+{
+	// voxelize mesh
+	Mesh* mesh = ImportMesh(meshFile);
+
+	if (!mesh)
+	{
+		printf("Could not open mesh for reading: %s\n", meshFile);
+		return;
+	}
+	else
+	{
+		Vec3 minExtents, maxExtents, edges;
+		mesh->GetBounds(minExtents, maxExtents);
+		edges = maxExtents - minExtents;
+
+		// normalize mesh scale
+		float longestAxis = max(max(edges.x, edges.y), edges.z);
+
+		mesh->Transform(TranslationMatrix(Point3(-Vec3(minExtents))));
+		//mesh->Transform(RotationMatrix(-kPi*0.0f, Vec3(1.0f, 0.0f, 0.0f)));
+		mesh->Transform(ScaleMatrix(scale / longestAxis));
+		mesh->Transform(TranslationMatrix(Point3(lower)));
+
+		mesh->GetBounds(minExtents, maxExtents);
+		mesh->m_colours.resize(0);
+
+		/*add begin*/
+		g_numPoints = mesh->GetNumVertices();
+		g_numTriangles = mesh->GetNumFaces();
+
+		g_saturations.resize(g_numTriangles, 0.0);
+		g_triangleNeighbours.resize(g_numTriangles, Vec3(-1.0, -1.0, -1.0));
+
+		g_pointTriangleNums = mesh->m_pointTriangleNums;
+		g_pointTriangles = mesh->m_pointTriangles;
+		g_trianglePoints = mesh->m_trianglePoints;
+
+		mesh->m_pointTriangleNums.resize(0);
+		mesh->m_pointTriangles.resize(0);
+		mesh->m_trianglePoints.resize(0);
+
+		/*add end*/
+
+		// store mesh 
+		g_mesh = mesh;
+
+		// square extents
+		edges = maxExtents - minExtents;
+		longestAxis = max(max(edges.x, edges.y), edges.z);
+		edges = longestAxis;
+
+		minExtents = minExtents - edges*0.1f;
+		maxExtents = minExtents + edges*1.1f;
+		edges = maxExtents - minExtents;
+
+		// try and load the sdf from disc if it exists
+		string sdfFile = string(meshFile, strrchr(meshFile, '.')) + ".pfm";
+
+		PfmImage sdf;
+		if (!PfmLoad(sdfFile.c_str(), sdf))
+		{
+			const int dim = 128;
+
+			sdf.m_width = dim;
+			sdf.m_height = dim;
+			sdf.m_depth = dim;
+			sdf.m_data = new float[dim*dim*dim];
+
+			printf("Cooking SDF: %s - dim: %d^3\n", sdfFile.c_str(), dim);
+
+			CreateSDF(mesh, dim, minExtents, maxExtents, sdf.m_data);
+
+			PfmSave(sdfFile.c_str(), sdf);
+		}
+
+		printf("Loaded SDF, %d\n", sdf.m_width);
+
+		assert(sdf.m_width == sdf.m_height && sdf.m_width == sdf.m_depth);
+
+		// cheap collision offset
+		int numVoxels = int(sdf.m_width*sdf.m_height*sdf.m_depth);
+		for (int i = 0; i < numVoxels; ++i)
+			sdf.m_data[i] += expand;
+
+		// set up flex collision shape
+		g_shape.mWidth = sdf.m_width;
+		g_shape.mHeight = sdf.m_height;
+		g_shape.mDepth = sdf.m_depth;
+		(Vec3&)g_shape.mLower = minExtents;
+		(Vec3&)g_shape.mUpper = maxExtents;
+		(Vec3&)g_shape.mInvEdgeLength = Vec3(1.0f / edges.x, 1.0f / edges.y, 1.0f / edges.z);
+		g_shape.mField = sdf.m_data;
+	}
+}
+/*add end*/
+
 inline int GridIndex(int x, int y, int dx) { return y*dx + x; }
 
 void CreateSpring(int i, int j, float stiffness, float give=0.0f)
@@ -687,10 +786,14 @@ void CreateSpringGrid(Vec3 lower, int dx, int dy, int dz, float radius, int phas
 				g_positions.push_back(Vec4(position.x, position.y, position.z, invMass));
 				g_velocities.push_back(velocity);
 				g_phases.push_back(phase);
+				
+				/*added by eleanor*/
 
 				//g_uvs.push_back(Vec3((float)x / dx * 8, (float)y / dy * 8, 0.0));
 				//g_uvs.push_back(Vec3((float)x / dx * 4, (float)y / dy * 4, 0.0));
 				g_uvs.push_back(Vec3((float)x / dx, (float)y / dy, 0.0));
+
+				/*add end*/
 
 				if (x > 0 && y > 0)
 				{
@@ -763,6 +866,196 @@ void CreateSpringGrid(Vec3 lower, int dx, int dy, int dz, float radius, int phas
 		}
 	}	
 }
+
+/*added by eleanor*/
+inline int GridIndex(int x, int y, int z, int dx, int dy) { return z * dx * dy + y * dx + x; }
+
+
+void renewTrianglePoints(int idxp, int idxpt, int idxt) {
+	Vec4 tmp = g_pointTriangles[idxp];
+	switch (idxpt)
+	{
+	case 0:
+		tmp.w = idxt;
+		break;
+	case 1:
+		tmp.x = idxt;
+		break;
+	case 2:
+		tmp.y = idxt;
+		break;
+	case 3:
+		tmp.z = idxt;
+		break;
+	default:
+		break;
+	}
+	g_pointTriangles[idxp] = tmp;
+}
+void AddTriangleToPoints(int idxp, int idxt1, int idxt2) {
+	int idx = g_pointTriangleNums[idxp];
+	if (idxt1 > -1) {
+		if (idx < 4) {
+			renewTrianglePoints(idxp * 2, idx, idxt1);
+			g_pointTriangleNums[idxp] = idx + 1;
+			idx++;
+		}
+		else {
+			renewTrianglePoints(idxp * 2 + 1, idx - 4, idxt1);
+			g_pointTriangleNums[idxp] = idx + 1;
+			idx++;
+		}
+	}
+	if (idxt2 > -1) {
+		if (idx < 4) {
+			renewTrianglePoints(idxp * 2, idx, idxt2);
+			g_pointTriangleNums[idxp] = idx + 1;
+			idx++;
+		}
+		else {
+			renewTrianglePoints(idxp * 2 + 1, idx - 4, idxt2);
+			g_pointTriangleNums[idxp] = idx + 1;
+			idx++;
+		}
+	}
+}
+//add relations of triangles & points
+void CreateSpringGrid2(Vec3 lower, int dx, int dy, int dz, float radius, int phase, float stretchStiffness, float bendStiffness, float shearStiffness, Vec3 velocity, float invMass) {
+
+	int baseIndex = int(g_positions.size());
+
+	int index = 0;
+
+	for (int z = 0; z < dz; ++z)
+	{
+		for (int y = 0; y < dy; ++y)
+		{
+			for (int x = 0; x < dx; ++x)
+			{
+				Vec3 position = lower + radius*Vec3(float(x), float(z), float(y));
+
+				g_positions.push_back(Vec4(position.x, position.y, position.z, invMass));
+				g_velocities.push_back(velocity);
+				g_phases.push_back(phase);
+
+				/*add begin*/
+
+				//g_uvs.push_back(Vec3((float)x / dx * 8, (float)y / dy * 8, 0.0));
+				//g_uvs.push_back(Vec3((float)x / dx * 4, (float)y / dy * 4, 0.0));
+				g_uvs.push_back(Vec3((float)x / dx, (float)y / dy, 0.0));
+
+				int i = GridIndex(x, y, dx);
+				g_pointTriangleNums[i] = 0;
+				g_pointTriangles[i * 2] = Vec4(-1.0, -1.0, -1.0, -1.0);
+				g_pointTriangles[i * 2 + 1] = Vec4(-1.0, -1.0, -1.0, -1.0);
+
+
+				/*add end*/
+
+				if (x > 0 && y > 0)
+				{
+					/*add begin*/
+					
+					int p1 = GridIndex(x - 1, y - 1, dx);
+					int p2 = GridIndex(x, y - 1, dx);
+					int p3 = GridIndex(x - 1, y, dx);
+					int p4 = GridIndex(x, y, dx);
+
+					/*add end*/
+
+					g_triangles.push_back(baseIndex + GridIndex(x - 1, y - 1, dx));
+					g_triangles.push_back(baseIndex + GridIndex(x, y - 1, dx));
+					g_triangles.push_back(baseIndex + GridIndex(x, y, dx));
+
+					g_triangles.push_back(baseIndex + GridIndex(x - 1, y - 1, dx));
+					g_triangles.push_back(baseIndex + GridIndex(x, y, dx));
+					g_triangles.push_back(baseIndex + GridIndex(x - 1, y, dx));
+
+					g_triangleNormals.push_back(Vec3(0.0f, 1.0f, 0.0f));
+					g_triangleNormals.push_back(Vec3(0.0f, 1.0f, 0.0f));
+
+					/*add begin*/
+
+					g_saturations.push_back(0.0);
+					g_saturations.push_back(0.0);
+
+					g_triangleNeighbours.push_back(Vec3(-1.0, -1.0, -1.0));
+					g_triangleNeighbours.push_back(Vec3(-1.0, -1.0, -1.0));
+
+					g_trianglePoints.push_back(Vec3(p1, p2, p3));
+					g_trianglePoints.push_back(Vec3(p1, p4, p3));
+
+					AddTriangleToPoints(p1, index, index + 1);
+					AddTriangleToPoints(p2, index, -1);
+					AddTriangleToPoints(p3, index, index + 1);
+					AddTriangleToPoints(p4, index + 1, -1);
+					index += 2;
+
+					/*add end*/
+				}
+			}
+		}
+	}
+
+	// horizontal
+	for (int y = 0; y < dy; ++y)
+	{
+		for (int x = 0; x < dx; ++x)
+		{
+			int index0 = y*dx + x;
+
+			if (x > 0)
+			{
+				int index1 = y*dx + x - 1;
+				CreateSpring(baseIndex + index0, baseIndex + index1, stretchStiffness);
+			}
+
+			if (x > 1)
+			{
+				int index2 = y*dx + x - 2;
+				CreateSpring(baseIndex + index0, baseIndex + index2, bendStiffness);
+			}
+
+			if (y > 0 && x < dx - 1)
+			{
+				int indexDiag = (y - 1)*dx + x + 1;
+				CreateSpring(baseIndex + index0, baseIndex + indexDiag, shearStiffness);
+			}
+
+			if (y > 0 && x > 0)
+			{
+				int indexDiag = (y - 1)*dx + x - 1;
+				CreateSpring(baseIndex + index0, baseIndex + indexDiag, shearStiffness);
+			}
+		}
+	}
+
+	// vertical
+	for (int x = 0; x < dx; ++x)
+	{
+		for (int y = 0; y < dy; ++y)
+		{
+			int index0 = y*dx + x;
+
+			if (y > 0)
+			{
+				int index1 = (y - 1)*dx + x;
+				CreateSpring(baseIndex + index0, baseIndex + index1, stretchStiffness);
+			}
+
+			if (y > 1)
+			{
+				int index2 = (y - 2)*dx + x;
+				CreateSpring(baseIndex + index0, baseIndex + index2, bendStiffness);
+			}
+		}
+	}
+
+}
+
+
+/*add end*/
+
 
 void CreateRope(Rope& rope, Vec3 start, Vec3 dir, float stiffness, int segments, float length, int phase, float spiralAngle=0.0f, float invmass=1.0f, float give=0.075f)
 {
@@ -1086,4 +1379,487 @@ void DrawImguiString(int x, int y, Vec3 color, int align, const char* s, ...)
 	imguiDrawText(x, y, align, buf, imguiRGBA((unsigned char)(color.x*255), (unsigned char)(color.y*255), (unsigned char)(color.z*255)));
 }
 
+
+/*added by eleanor*/
+
+//initiate
+int trans(int ip, int idx) {
+	Vec4 tmp1 = g_pointTriangles[ip * 2];
+	Vec4 tmp2 = g_pointTriangles[ip * 2 + 1];
+	switch (idx)
+	{
+	case 0:
+		return int(tmp1.w);
+	case 1:
+		return int(tmp1.x);
+	case 2:
+		return int(tmp1.y);
+	case 3:
+		return int(tmp1.z);
+	case 4:
+		return int(tmp2.w);
+	case 5:
+		return int(tmp2.x);
+	case 6:
+		return int(tmp2.y);
+	case 7:
+		return int(tmp2.z);
+
+	default:
+		break;
+	}
+	return 0;
+}
+void renewNeighbour(int it, int p, int in) {
+	Vec3 neighbours = g_triangleNeighbours[it];
+	if (p == 0) {
+		//adjacent edge is xy
+		neighbours.x = in;
+	}
+	else if (p = 1) {
+		//adjacent edge is yz
+		neighbours.y = in;
+	}
+	else if (p == 2) {
+		//adjacent edge is zx
+		neighbours.z = in;
+	}
+	g_triangleNeighbours[it] = neighbours;
+}
+void checkNeighbour(int ip, int it1, int it2) {
+	int idx1 = trans(ip, it1);
+	int idx2 = trans(ip, it2);
+
+	Vec3 point1 = g_trianglePoints[idx1];
+	Vec3 point2 = g_trianglePoints[idx2];
+
+	int p1 = -1, p2 = -1;
+
+	if (point1.x == point2.x && point1.y == point2.y) {
+		p1 = 0, p2 = 0;
+	}
+	else if (point1.x == point2.y && point1.y == point2.z) {
+		p1 = 0; p2 = 1;
+	}
+	else if (point1.x == point2.x && point1.y == point2.z) {
+		p1 = 0; p2 = 2;
+	}
+	else if (point1.y == point2.x && point1.z == point2.y) {
+		p1 = 1; p2 = 0;
+	}
+	else if (point1.y == point2.y && point1.z == point2.z) {
+		p1 = 1; p2 = 1;
+	}
+	else if (point1.y == point2.x && point1.z == point2.z) {
+		p1 = 1; p2 = 2;
+	}
+	else if (point1.x == point2.x && point1.z == point2.y) {
+		p1 = 2; p2 = 0;
+	}
+	else if (point1.x == point2.y && point1.z == point2.z) {
+		p1 = 2; p2 = 1; 
+	}
+	else if (point1.x == point2.x && point1.z == point2.z) {
+		p1 = 2; p2 = 2;
+	}
+
+	if (p1 >= 0) {
+		renewNeighbour(idx1, p1, idx2);
+	}
+	if (p2 >= 0) {
+		renewNeighbour(idx2, p2, idx1);
+	}
+}
+void CalculateTriangleNeighbours() {
+	if (g_triangleNeighbours.size() == 0) {
+		g_triangleNeighbours.resize(g_numTriangles);
+	}
+
+	for (int i = 0; i < g_numPoints; i++) {
+		int num = g_pointTriangleNums[i];
+		for (int j = 0; j < num; j++) {
+			for (int k = j + 1; k < num; k++) {
+				checkNeighbour(i, j, k);
+			}
+		}
+	}
+}
+
+float getMin(float x, float y) {
+	if (x < y) return x;
+	else return y;
+}
+
+float getMax(float x, float y) {
+	if (x > y) return x;
+	else return y;
+}
+
+//colors
+
+void CalculateColors() {
+	float maxSaturation = g_maxSaturation * g_kMaxAbsorption;
+
+	Vec4 color = g_clothColor;
+	Vec4 colorBase = color / maxSaturation;
+
+	for (int i = 0; i < g_numPoints; i++) {
+		float saturation = 0.0;
+		int num = g_pointTriangleNums[i];
+
+		Vec4 tmp1 = g_pointTriangles[i * 2];
+		Vec4 tmp2 = g_pointTriangles[i * 2 + 1];
+
+		switch (num) {
+		case 8:
+			saturation += g_saturations[int(tmp2.z)];
+		case 7:
+			saturation += g_saturations[int(tmp2.y)];
+		case 6:
+			saturation += g_saturations[int(tmp2.x)];
+		case 5:
+			saturation += g_saturations[int(tmp2.w)];
+		case 4:
+			saturation += g_saturations[int(tmp1.z)];
+		case 3:
+			saturation += g_saturations[int(tmp1.y)];
+		case 2:
+			saturation += g_saturations[int(tmp1.x)];
+		case 1:
+			saturation += g_saturations[int(tmp1.w)];
+		default:
+			break;
+		}
+
+		if (num > 0) {
+			saturation = saturation / num;
+		}
+
+		if (saturation < 0.0) saturation = 0.0;
+		if (saturation > maxSaturation) saturation = maxSaturation;
+
+		if (g_markColor && saturation > 0.0) {
+			g_colors[i] = g_markColors[(int)(saturation / maxSaturation * 10)];
+		}
+		else {
+			g_colors[i] = colorBase * (maxSaturation - saturation);
+		}
+	}
+}
+void CalculateMeshColors() {
+	if (g_mesh->m_colours.size() == 0) {
+		g_mesh->m_colours.resize(g_numPoints);
+	}
+
+	float maxSaturation = g_maxSaturation * g_kMaxAbsorption;
+
+	Vec4 color = g_clothColor;
+	Vec4 colorBase = color / maxSaturation;
+
+	for (int i = 0; i < g_numPoints; i++) {
+		float saturation = 0.0;
+		int num = g_pointTriangleNums[i];
+		Vec4 tmp1 = g_pointTriangles[i * 2];
+		Vec4 tmp2 = g_pointTriangles[i * 2 + 1];
+
+		switch (num) {
+		case 8:
+			saturation += g_saturations[int(tmp2.z)];
+		case 7:
+			saturation += g_saturations[int(tmp2.y)];
+		case 6:
+			saturation += g_saturations[int(tmp2.x)];
+		case 5:
+			saturation += g_saturations[int(tmp2.w)];
+		case 4:
+			saturation += g_saturations[int(tmp1.z)];
+		case 3:
+			saturation += g_saturations[int(tmp1.y)];
+		case 2:
+			saturation += g_saturations[int(tmp1.x)];
+		case 1:
+			saturation += g_saturations[int(tmp1.w)];
+		default:
+			break;
+		}
+
+		if (saturation < 0.0) saturation = 0.0;
+		if (saturation > maxSaturation) saturation = maxSaturation;
+
+		if (g_markColor && saturation > 0.0) {
+			Vec4 color = g_markColors[(int)(saturation / maxSaturation * 10)];
+			g_mesh->m_colours[i] = Colour(color.x, color.y, color.z, color.w);
+		}
+		else {
+			Vec4 color = colorBase * (maxSaturation - saturation);
+			g_mesh->m_colours[i] = Colour(color.x, color.y, color.z, color.w);
+		}
+	}
+}
+
+
+//absorb
+bool Collide(int i, int j) {
+	Vec4 posX = g_positions[i];
+	Vec4 posY = g_positions[j];
+
+	if (posX.y - posY.y > g_params.mSolidRestDistance) return false;
+	if (posX.x - posY.x > g_params.mSolidRestDistance) return false;
+	if (posX.z - posY.z > g_params.mSolidRestDistance) return false;
+
+	float dist = sqrt(sqr(posX.x - posY.x) + sqr(posX.y - posY.y) + sqr(posX.z - posY.z));
+
+	if (dist <= g_params.mSolidRestDistance) {
+		/*TODO: get the collide position*/
+
+		return true;
+	}
+
+	return false;
+
+}
+void UpdateSaturations(int idx) {
+	int num = g_pointTriangleNums[idx];
+
+	Vec4 tmp1 = g_pointTriangles[idx * 2];
+	Vec4 tmp2 = g_pointTriangles[idx * 2 + 1];
+
+	float tmp = g_mDrip / num;
+
+	switch (num)
+	{
+	case 8:
+		g_saturations[int(tmp2.z)] += tmp;
+	case 7:
+		g_saturations[int(tmp2.y)] += tmp;
+	case 6:
+		g_saturations[int(tmp2.x)] += tmp;
+	case 5:
+		g_saturations[int(tmp2.w)] += tmp;
+	case 4:
+		g_saturations[int(tmp1.z)] += tmp;
+	case 3:
+		g_saturations[int(tmp1.y)] += tmp;
+	case 2:
+		g_saturations[int(tmp1.x)] += tmp;
+	case 1:
+		g_saturations[int(tmp1.w)] += tmp;
+	default:
+		break;
+	}
+}
+
+void Absorbing() {
+	int activeCount = flexGetActiveCount(g_flex);
+
+	int i = g_numSolidParticles;
+	while (i < activeCount) {
+		int collidePosition = -1;
+		for (int j = 0; j < g_numSolidParticles; j++) {
+			if (Collide(i, j)) {
+				collidePosition = j;
+				break;
+			}
+		}
+
+		//i is absorbable & collided
+		if (g_absorbable[i] && collidePosition > -1) {
+			//proportion
+			int tmp = rand() % 10;
+			if (tmp >= 10 * g_kAbsorption) {
+				i++;
+				continue;
+			}
+
+			//cloth position j
+			UpdateSaturations(collidePosition);
+
+			//fluid point i
+			g_positions[i] = g_positions[activeCount - 1];
+			g_positions[activeCount - 1] = Vec4();
+
+			g_velocities[i] = g_velocities[activeCount - 1];
+			g_velocities[activeCount - 1] = 0.0f;
+
+			g_phases[i] = g_phases[activeCount - 1];
+			g_phases[activeCount] = 0;
+
+			activeCount--;
+			continue;
+		}
+
+		if (!g_absorbable[i] && collidePosition == -1) {
+			g_absorbable[i] = true;
+		}
+
+		i++;
+
+		flexSetActive(g_flex, &g_activeIndices[0], activeCount, eFlexMemoryHost);
+	}
+}
+
+
+//diffuse
+void CalculateTriangleCenters() {
+	if (g_triangleCenters.size() == 0) {
+		g_triangleCenters.resize(g_numTriangles);
+	}
+
+	for (int i = 0; i < g_numTriangles; i++) {
+		Vec3 points = g_trianglePoints[i];
+		Vec3 position0 = g_positions[int(points.x)];
+		Vec3 position1 = g_positions[int(points.y)];
+		Vec3 position2 = g_positions[int(points.z)];
+
+		//g_triangleCenters[i] = position1 + (position0 - position1 + position2 - position1) / 3;
+		g_triangleCenters[i] = (position0 + position1 + position2) / 3;
+	}
+}
+Vec3 calculateCosTheta(int index) {
+	float t0 = 10.0, t1 = 10.0, t2 = 10.0;
+	Vec3 neighbours = g_triangleNeighbours[index];
+	if (neighbours.x >= 0) {
+		Vec3 dir = g_triangleCenters[int(neighbours.x)] - g_triangleCenters[index];
+		t0 = (-dir.y) / (sqrt(sqr(dir.x) + sqr(dir.y) + sqr(dir.z)));
+	}
+	if (neighbours.y >= 0) {
+		Vec3 dir = g_triangleCenters[int(neighbours.y)] - g_triangleCenters[index];
+		t0 = (-dir.y) / (sqrt(sqr(dir.x) + sqr(dir.y) + sqr(dir.z)));
+	}
+	if (neighbours.z >= 0) {
+		Vec3 dir = g_triangleCenters[int(neighbours.z)] - g_triangleCenters[index];
+		t0 = (-dir.y) / (sqrt(sqr(dir.x) + sqr(dir.y) + sqr(dir.z)));
+	}
+	return Vec3(t0, t1, t2);
+}
+void CalculateThetas() {
+	if (g_thetas.size() == 0) {
+		g_thetas.resize(g_numTriangles);
+	}
+
+	for (int i = 0; i < g_numTriangles; i++) {
+		g_thetas[i] = calculateCosTheta(2);
+	}
+}
+
+void Diffusing() {
+	vector<float> deltas;
+	deltas.resize(g_numTriangles);
+
+	for (int i = 0; i < g_numTriangles; i++) {
+		float sSum = 0;
+		float si = g_saturations[i];
+		Vec3 thetas = g_thetas[i];
+		Vec3 neighbours = g_triangleNeighbours[i];
+		Vec3 deltasin = Vec3(0.0, 0.0, 0.0);
+
+		if (thetas.x <= 1.0) {
+			deltasin.x = getMax(0.0f, g_kDiffusion * (si - g_saturations[int(neighbours.x)]) + g_kDiffusionGravity * si * thetas.x);
+			sSum += deltasin.x;
+		}
+		if (thetas.y <= 1.0) {
+			deltasin.y = getMax(0.0f, g_kDiffusion * (si - g_saturations[int(neighbours.y)]) + g_kDiffusionGravity * si * thetas.y);
+			sSum += deltasin.y;
+		}
+		if (thetas.z <= 1.0) {
+			deltasin.z = getMax(0.0f, g_kDiffusion * (si - g_saturations[int(neighbours.z)]) + g_kDiffusionGravity * si * thetas.z);
+			sSum += deltasin.z;
+		}
+
+		float normFac = 1.0;
+		if (sSum > si) {
+			normFac = si / sSum;
+		}
+
+		if (thetas.x <= 1.0) {
+			deltas[i] += -normFac * deltasin.x;
+			deltas[int(neighbours.x)] += normFac * deltasin.x;
+		}
+		if (thetas.y <= 1.0) {
+			deltas[i] += -normFac * deltasin.y;
+			deltas[int(neighbours.y)] += normFac * deltasin.y;
+		}
+		if (thetas.z <= 1.0) {
+			deltas[i] += -normFac * deltasin.z;
+			deltas[int(neighbours.z)] += normFac * deltasin.z;
+		}
+	}
+
+	for (int i = 0; i < g_numTriangles; i++) {
+		g_saturations[i] += deltas[i];
+		if (g_saturations[i] < 0) {
+			if (g_saturations[i] == -0.0) {
+				printf("mark\n");
+			}
+			g_saturations[i] = 0;
+		}
+	}
+
+}
+
+//drip
+void CreateParticle(int index, int &activeCount) {
+	Vec3 emitterDir = Vec3(0.0f, -1.0f, 0.0f);
+	Vec3 emitterRight = Vec3(-1.0f, 0.0f, 0.0f);
+
+	//position
+	Vec3 centerPos = g_triangleCenters[index];
+	Vec3 aPos = g_positions[int(g_trianglePoints[index].x)];
+	Vec3 bPos = g_positions[int(g_trianglePoints[index].y)];
+	Vec3 cPos = g_positions[int(g_trianglePoints[index].z)];
+
+	int a = rand() % 101;
+	int b = rand() % 101;
+	int c = rand() % 101;
+	Vec3 emitterPos = (centerPos * (101 - a - b - c) + aPos * a + bPos * b + cPos * c) / 100.0;
+	emitterPos -= g_triangleNormals[index] * g_params.mCollisionDistance * 2.0;
+
+	float r;
+	int phase;
+
+	if (g_params.mFluid) {
+		r = g_params.mFluidRestDistance;
+		phase = flexMakePhase(0, eFlexPhaseSelfCollide | eFlexPhaseFluid);
+	}
+	else {
+		r = g_params.mSolidRestDistance;
+		phase = flexMakePhase(0, eFlexPhaseSelfCollide);
+	}
+
+	if (size_t(activeCount) < g_positions.size()) {
+		g_positions[activeCount] = Vec4(emitterPos, 1.0f);
+		g_velocities[activeCount] = Vec3(0.0f, 0.0f, 0.0f);
+		g_phases[activeCount] = phase;
+		g_absorbable[activeCount] = true;
+		activeCount++;
+	}
+}
+
+void Dripping() {
+	if (g_dripBuffer.size() == 0) {
+		g_dripBuffer.resize(g_numTriangles);
+	}
+
+	int triangleNum = (g_dx - 1) * (g_dy - 1) * 2;
+
+	int activeCount = flexGetActiveCount(g_flex);
+
+	float maxSaturation = g_maxSaturation * g_kMaxAbsorption;
+
+	for (int i = 0; i < triangleNum; i++) {
+		if (g_saturations[i] > maxSaturation) {
+			float m = g_saturations[i] - maxSaturation;
+			g_dripBuffer[i] += m;
+			while (g_dripBuffer[i] > g_mDrip) {
+				CreateParticle(i, activeCount);
+				g_dripBuffer[i] -= g_mDrip;
+			}
+			g_saturations[i] = maxSaturation;
+		}
+	}
+
+	flexSetActive(g_flex, &g_activeIndices[0], activeCount, eFlexMemoryHost);
+}
+
+/*add end*/
 

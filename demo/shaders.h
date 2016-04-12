@@ -66,7 +66,7 @@ void UnbindSolidShader();
 
 /*added by eleanor*/
 void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, int cshader_mode, float cshader_kd, float cshader_a, float shader_fresnelPowRow, float shader_fresnelPowCol, Vec3 colorRow, Vec3 colorCol, float expand = 0.0f, bool twosided = true, bool smooth = true);
-/*end*/
+/*add end*/
 
 // new fluid renderer
 struct FluidRenderer;

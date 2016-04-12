@@ -270,7 +270,7 @@ uniform bool clothColor;
 uniform vec3 clothColorRow;
 uniform vec3 clothColorCol;
 
-/*added end*/
+/*add end*/
 
 float sqr(float x) { return x*x; }
 
@@ -813,9 +813,9 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 
 	bool texFlag = LoadGLTextures("../../data/textures/mycloth.bmp", 0);
 	//bool normalFlag = loadNormalMap("LinenPlain");
-	//bool normalFlag = loadNormalMap("CreprDeChine");
+	bool normalFlag = loadNormalMap("CreprDeChine");
 	//bool normalFlag = loadNormalMap("PolyesterStainCharmeuseFront");
-	bool normalFlag = loadNormalMap("PolyesterStainCharmeuseBack");
+	//bool normalFlag = loadNormalMap("PolyesterStainCharmeuseBack");
 	
 	if (texFlag) {
 
@@ -914,6 +914,8 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 		glUniform1i(glGetUniformLocation(s_diffuseProgram, "normal"), 0);
 	}
 }
+
+/*add end*/
 
 void DrawCloth(const Vec4* positions, const Vec4* normals, const float* uvs, const int* indices, int numTris, int numPositions, int colorIndex, float expand, bool twosided, bool smooth)
 { 

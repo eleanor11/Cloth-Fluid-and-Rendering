@@ -3822,10 +3822,48 @@ public:
 		float invmass = 0.25f;
 		int group = 0;
 
+		/*add begin*/
+
+		g_absorb = true;
+		g_diffuse = true;
+		g_drip = true;
+		g_markColor = false;
+
+		g_emitterWidth = 5;
+
+		g_kAbsorption = 1.0;
+		g_kMaxAbsorption = 0.3;
+		g_kDiffusion = 0.3;
+		g_kDiffusionGravity = 0.2;
+
+		g_camInit = false;
+		g_camPos = Vec3(0.7f, 1.7f, 2.9f);
+		g_camAngle = Vec3(0.0f, -0.4f, 0.0f);
+
+		g_dripBuffer.resize(0);
+		g_saturations.resize(0);
+		g_triangleCenters.resize(0);
+		g_triangleNeighbours.resize(0);
+		g_thetas.resize(0);
+		g_pointTriangleNums.resize(dimx * dimy);
+		g_pointTriangles.resize(dimx * dimy * 2);
+		g_trianglePoints.resize(0);
+
+		g_dx = dimx;
+		g_dy = dimy;
+
+		g_numTriangles = (dimx - 1) * (dimy - 1) * 2;
+		g_numPoints = dimx * dimy;
+
+		/*add end*/
+
 		{
 			int clothStart = 0;
 
-			CreateSpringGrid(Vec3(0.0f, 1.0f, 0.0f), dimx, dimy, 1, radius*0.25f, flexMakePhase(group++, 0), stretchStiffness, bendStiffness, shearStiffness, Vec3(0.0f), invmass);
+			//CreateSpringGrid(Vec3(0.0f, 1.0f, 0.0f), dimx, dimy, 1, radius*0.25f, flexMakePhase(group++, 0), stretchStiffness, bendStiffness, shearStiffness, Vec3(0.0f), invmass);
+			CreateSpringGrid2(Vec3(0.0f, 1.0f, 0.0f), dimx, dimy, 1, radius*0.25f, flexMakePhase(group++, 0), stretchStiffness, bendStiffness, shearStiffness, Vec3(0.0f), invmass);
+
+			CalculateTriangleNeighbours();
 
 			int corner0 = clothStart + 0;
 			int corner1 = clothStart + dimx - 1;
@@ -3879,6 +3917,21 @@ public:
 		g_lightDistance = 3.0f;
 		g_pointScale = 0.5f;
 
+		g_params.mDynamicFriction = 0.125f;
+		g_params.mViscosity = 0.1f;
+		g_params.mCohesion = 0.0035f;
+		g_params.mViscosity = 4.0f;
+
+		g_emitters[0].mEnabled = false;
+
+		Emitter e;
+		e.mDir = Normalize(Vec3(1.0f, 0.0f, 0.0f));
+		e.mEnabled = true;
+		e.mPos = Vec3(-0.25f, 1.75f, 0.5f);
+		e.mRight = Cross(e.mDir, Vec3(0.0f, 0.0f, 1.0f));
+		e.mSpeed = (g_params.mFluidRestDistance / (g_dt * 2.0f));
+
+		g_emitters.push_back(e);
 
 		// draw options		
 		g_drawPoints = false;
@@ -3887,6 +3940,31 @@ public:
 	}
 
 	virtual void DoGui(){
+		imguiLabel("Fluid Control");
+
+		if (imguiCheck("Dyeing", bool(g_absorb != 0 && g_diffuse != 0 && g_drip != 0))) {
+			if (g_absorb && g_diffuse && g_drip) {
+				g_absorb = false;
+				g_diffuse = false;
+				g_drip = false;
+			}
+			else {
+				g_absorb = true;
+				g_diffuse = true;
+				g_drip = true;
+			}
+		}
+
+		if (imguiCheck("Absorbing", bool(g_absorb != 0))) {
+			g_absorb = !g_absorb;
+		}
+		if (imguiCheck("Diffusing", bool(g_diffuse != 0))) {
+			g_diffuse = !g_diffuse;
+		}
+		if (imguiCheck("Dripping", bool(g_drip != 0))) {
+			g_drip = !g_drip;
+		}
+
 		imguiLabel("Shader");
 
 		if (imguiCheck("Normal Shader", bool(g_shaderMode == 0))) {

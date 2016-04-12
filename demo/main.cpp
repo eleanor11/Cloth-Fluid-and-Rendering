@@ -197,6 +197,54 @@ FILE* g_ffmpeg;
 
 /*added by eleanor*/
 
+//fluid & cloth
+
+int colorFlag = -1;
+Vec4 g_clothColor;
+vector<Vec4> g_colors;
+vector<Vec4> g_markColors;
+
+
+int g_dx;
+int g_dy;
+int g_dz;
+
+int g_numPoints;
+int g_numTriangles;
+
+float g_clothRadius;
+
+int g_emitterWidth;
+
+float g_kAbsorption;
+float g_kMaxAbsorption;
+vector<bool> g_absorbable;
+vector<int> g_emitTime;
+
+float g_kDiffusion;
+float g_kDiffusionGravity;
+float g_maxSaturation;
+vector<float> g_saturations;
+vector<Vec3> g_triangleCenters;
+vector<Vec3> g_triangleNeighbours;
+vector<Vec3> g_thetas;
+
+vector<int> g_pointTriangleNums;
+vector<Vec4> g_pointTriangles;
+vector<Vec3> g_trianglePoints;
+
+float g_mDrip;
+vector<float> g_dripBuffer;
+
+bool g_absorb;
+bool g_diffuse;
+bool g_drip;
+bool g_markColor;
+
+bool g_camInit = false;
+
+
+//shader
 int g_shaderMode;
 
 float g_cshader_kd;
@@ -456,6 +504,62 @@ void Init(int scene, bool centerCamera=true)
 
 	/*added by eleanor*/
 
+	//fluid & cloth
+
+	/*set origin cloth color*/
+	g_clothRadius = 0.1 * 0.25f;
+	g_clothColor = Vec4(0.3f, 1.0f, 1.0f, 1.0f);
+	g_colors.resize(0);
+
+	g_markColors.push_back(Vec4(0.0, 0.0, 1.0, 1.0));
+	g_markColors.push_back(Vec4(0.0, 0.25, 1.0, 1.0));
+	g_markColors.push_back(Vec4(0.0, 0.5, 1.0, 1.0));
+	g_markColors.push_back(Vec4(0.0, 1.0, 1.0, 1.0));
+	g_markColors.push_back(Vec4(0.0, 1.0, 0.5, 1.0));
+	g_markColors.push_back(Vec4(0.0, 1.0, 0.0, 1.0));
+	g_markColors.push_back(Vec4(0.5, 1.0, 0.0, 1.0));
+	g_markColors.push_back(Vec4(1.0, 1.0, 0.0, 1.0));
+	g_markColors.push_back(Vec4(1.0, 0.5, 0.0, 1.0));
+	g_markColors.push_back(Vec4(1.0, 0.0, 0.0, 1.0));
+	g_markColors.push_back(Vec4(1.0, 0.0, 0.0, 1.0));
+
+
+
+	g_dx = 0;
+	g_dy = 0; 
+	g_dz = 0;
+
+	g_numPoints = 0;
+	g_numTriangles = 0;
+	
+	g_emitterWidth = 3;
+
+	g_kAbsorption = 1.0;
+	g_kMaxAbsorption = 0.0;
+	g_kDiffusion = 0.0;
+	g_kDiffusionGravity = 0.0;
+
+	g_maxSaturation = 10.0;
+	g_absorbable.resize(0);
+	g_emitTime.resize(0);
+
+	g_saturations.resize(0);
+	g_triangleCenters.resize(0);
+	g_triangleNeighbours.resize(0);
+	g_thetas.resize(0);
+
+	g_mDrip = 0.5;
+	g_dripBuffer.resize(0);
+
+	g_absorb = false;
+	g_diffuse = false;
+	g_drip = false;
+
+	g_camInit = true;
+
+
+	//shader
+
 	g_shaderMode = 1;
 
 	g_cshader_kd = 0.5;
@@ -474,6 +578,14 @@ void Init(int scene, bool centerCamera=true)
 
 	uint32_t numParticles = g_positions.size();
 	uint32_t maxParticles = numParticles + g_numExtraParticles*g_numExtraMultiplier;
+
+	/*added by eleanor*/
+
+	g_colors.resize(numParticles);
+	g_absorbable.resize(maxParticles);
+	g_emitTime.resize(maxParticles);
+
+	/*added end*/
 
 	// by default solid particles use the maximum radius
 	if (g_params.mFluid && g_params.mSolidRestDistance == 0.0f)
@@ -716,6 +828,26 @@ void GLUTUpdate()
 
 		const Vec3 forward(-sinf(g_camAngle.x+spin)*cosf(g_camAngle.y), sinf(g_camAngle.y), -cosf(g_camAngle.x+spin)*cosf(g_camAngle.y));
 		const Vec3 right(Normalize(Cross(forward, Vec3(0.0f, 1.0f, 0.0f))));
+
+		/*added by eleanor*/
+
+		//absorb
+		if (g_absorb) {
+			Absorbing();
+		}
+		//diffuse
+		if (g_diffuse) {
+			CalculateTriangleCenters();
+			CalculateThetas();
+			Diffusing();
+		}
+		//drip
+		if (g_drip) {
+			Dripping();
+		}
+
+		/*added end*/
+
 
 		// process emitters
 		if (g_emit)
