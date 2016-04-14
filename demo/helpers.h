@@ -982,13 +982,13 @@ void CreateSpringGrid2(Vec3 lower, int dx, int dy, int dz, float radius, int pha
 					g_triangleNeighbours.push_back(Vec3(-1.0, -1.0, -1.0));
 					g_triangleNeighbours.push_back(Vec3(-1.0, -1.0, -1.0));
 
-					g_trianglePoints.push_back(Vec3(p1, p2, p3));
-					g_trianglePoints.push_back(Vec3(p1, p4, p3));
+					g_trianglePoints.push_back(Vec3(p1, p2, p4));
+					g_trianglePoints.push_back(Vec3(p1, p3, p4));
 
 					AddTriangleToPoints(p1, index, index + 1);
 					AddTriangleToPoints(p2, index, -1);
-					AddTriangleToPoints(p3, index, index + 1);
-					AddTriangleToPoints(p4, index + 1, -1);
+					AddTriangleToPoints(p3, index + 1, -1);
+					AddTriangleToPoints(p4, index, index + 1);
 					index += 2;
 
 					/*add end*/
@@ -1383,6 +1383,10 @@ void DrawImguiString(int x, int y, Vec3 color, int align, const char* s, ...)
 /*added by eleanor*/
 
 //initiate
+void printVec3(Vec3 x) {
+	cout << x.x << ' ' << x.y << ' ' << x.z << endl;
+}
+
 int trans(int ip, int idx) {
 	Vec4 tmp1 = g_pointTriangles[ip * 2];
 	Vec4 tmp2 = g_pointTriangles[ip * 2 + 1];
@@ -1416,7 +1420,7 @@ void renewNeighbour(int it, int p, int in) {
 		//adjacent edge is xy
 		neighbours.x = in;
 	}
-	else if (p = 1) {
+	else if (p == 1) {
 		//adjacent edge is yz
 		neighbours.y = in;
 	}
@@ -1430,8 +1434,13 @@ void checkNeighbour(int ip, int it1, int it2) {
 	int idx1 = trans(ip, it1);
 	int idx2 = trans(ip, it2);
 
+	//cout << idx1 << ' ' << idx2 << endl;
+
 	Vec3 point1 = g_trianglePoints[idx1];
 	Vec3 point2 = g_trianglePoints[idx2];
+
+	//printVec3(point1);
+	//printVec3(point2);
 
 	int p1 = -1, p2 = -1;
 
@@ -1753,15 +1762,15 @@ void Diffusing() {
 		Vec3 neighbours = g_triangleNeighbours[i];
 		Vec3 deltasin = Vec3(0.0, 0.0, 0.0);
 
-		if (thetas.x <= 1.0) {
+		if (thetas.x <= 1.0 && neighbours.x >= 0) {
 			deltasin.x = getMax(0.0f, g_kDiffusion * (si - g_saturations[int(neighbours.x)]) + g_kDiffusionGravity * si * thetas.x);
 			sSum += deltasin.x;
 		}
-		if (thetas.y <= 1.0) {
+		if (thetas.y <= 1.0 && neighbours.y >= 0) {
 			deltasin.y = getMax(0.0f, g_kDiffusion * (si - g_saturations[int(neighbours.y)]) + g_kDiffusionGravity * si * thetas.y);
 			sSum += deltasin.y;
 		}
-		if (thetas.z <= 1.0) {
+		if (thetas.z <= 1.0 && neighbours.z >= 0) {
 			deltasin.z = getMax(0.0f, g_kDiffusion * (si - g_saturations[int(neighbours.z)]) + g_kDiffusionGravity * si * thetas.z);
 			sSum += deltasin.z;
 		}
@@ -1771,20 +1780,19 @@ void Diffusing() {
 			normFac = si / sSum;
 		}
 
-		if (thetas.x <= 1.0) {
+		if (thetas.x <= 1.0 && neighbours.x >= 0) {
 			deltas[i] += -normFac * deltasin.x;
 			deltas[int(neighbours.x)] += normFac * deltasin.x;
 		}
-		if (thetas.y <= 1.0) {
+		if (thetas.y <= 1.0 && neighbours.y >= 0) {
 			deltas[i] += -normFac * deltasin.y;
 			deltas[int(neighbours.y)] += normFac * deltasin.y;
 		}
-		if (thetas.z <= 1.0) {
+		if (thetas.z <= 1.0 && neighbours.z >= 0) {
 			deltas[i] += -normFac * deltasin.z;
 			deltas[int(neighbours.z)] += normFac * deltasin.z;
 		}
 	}
-
 	for (int i = 0; i < g_numTriangles; i++) {
 		g_saturations[i] += deltas[i];
 		if (g_saturations[i] < 0) {

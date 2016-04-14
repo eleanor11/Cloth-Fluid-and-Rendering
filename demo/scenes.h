@@ -3818,6 +3818,8 @@ public:
 
 		int dimx = 32;
 		int dimy = 32;
+		//int dimx = 4;
+		//int dimy = 4;
 		float radius = 0.1f;
 		float invmass = 0.25f;
 		int group = 0;
@@ -3966,7 +3968,6 @@ public:
 		}
 
 		imguiLabel("Shader");
-
 		if (imguiCheck("Normal Shader", bool(g_shaderMode == 0))) {
 			g_shaderMode = 0;
 		}

@@ -729,6 +729,56 @@ void DrawSky()
 
 /*added by eleanor*/
 
+void DrawClothColor(const Vec4* positions, const Vec4* colors, const Vec4* normals, const float* uvs, const int* indices, int numTris, int numPositions, int colorIndex, float expand, bool twosided, bool smooth) {
+	if (!numTris)
+		return;
+
+	if (twosided)
+		glDisable(GL_CULL_FACE);
+
+	GLint program;
+	glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+
+	if (program == GLint(s_diffuseProgram))
+	{
+		GLint uBias = glGetUniformLocation(s_diffuseProgram, "bias");
+		glUniform1f(uBias, 0.0f);
+
+		GLint uExpand = glGetUniformLocation(s_diffuseProgram, "expand");
+		glUniform1f(uExpand, expand);
+	}
+
+	glVerify(glEnableClientState(GL_VERTEX_ARRAY));
+	glVerify(glEnableClientState(GL_NORMAL_ARRAY));
+	glVerify(glEnableClientState(GL_COLOR_ARRAY));
+	glVerify(glEnableClientState(GL_SECONDARY_COLOR_ARRAY));
+
+	glVerify(glVertexPointer(3, GL_FLOAT, sizeof(float) * 4, positions));
+	glVerify(glNormalPointer(GL_FLOAT, sizeof(float) * 4, normals));
+	glVerify(glColorPointer(3, GL_FLOAT, sizeof(float) * 4, colors));
+	glVerify(glSecondaryColorPointer(3, GL_FLOAT, sizeof(float) * 4, colors));
+
+	glVerify(glDrawElements(GL_TRIANGLES, numTris * 3, GL_UNSIGNED_INT, indices));
+
+	glVerify(glDisableClientState(GL_VERTEX_ARRAY));
+	glVerify(glDisableClientState(GL_NORMAL_ARRAY));
+	glVerify(glDisableClientState(GL_COLOR_ARRAY));
+	glVerify(glDisableClientState(GL_SECONDARY_COLOR_ARRAY));
+
+	if (twosided)
+		glEnable(GL_CULL_FACE);
+
+	if (program == GLint(s_diffuseProgram))
+	{
+		GLint uBias = glGetUniformLocation(s_diffuseProgram, "bias");
+		glUniform1f(uBias, gShadowBias);
+
+		GLint uExpand = glGetUniformLocation(s_diffuseProgram, "expand");
+		glUniform1f(uExpand, 0.0f);
+	}
+}
+
+
 const int nTex = 3;
 GLuint myTex[nTex];
 

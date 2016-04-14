@@ -65,6 +65,7 @@ void BindSolidShader(Vec3 lightPos, Vec3 lightTarget, Matrix44 lightTransform, G
 void UnbindSolidShader();
 
 /*added by eleanor*/
+void DrawClothColor(const Vec4* positions, const Vec4* colors, const Vec4* normals, const float* uvs, const int* indices, int numTris, int numPositions, int colorIndex = 3, float expand = 0.0f, bool twosided = true, bool smooth = true);
 void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, int cshader_mode, float cshader_kd, float cshader_a, float shader_fresnelPowRow, float shader_fresnelPowCol, Vec3 colorRow, Vec3 colorCol, float expand = 0.0f, bool twosided = true, bool smooth = true);
 /*add end*/
 

@@ -1247,8 +1247,12 @@ void GLUTUpdate()
 	//	DrawCloth(&g_positions[0], &g_normals[0],  g_uvs.size()?&g_uvs[0].x:NULL, &g_triangles[0], g_triangles.size()/3, g_positions.size(), 3, g_expandCloth);
 
 	if (g_drawCloth) {
-		MyDrawCloth(&g_positions[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_clothColorRow, g_clothColorCol, g_expandCloth);
-		BindSolidShader(g_lightPos, g_lightTarget, lightTransform, g_shadowTex, 0.0f, Vec4(g_clearColor, g_fogDistance));
+
+		CalculateColors();
+		DrawClothColor(&g_positions[0], &g_colors[0], &g_normals[0], g_uvs.size() ? &g_uvs[0].x : NULL, &g_triangles[0], g_triangles.size() / 3, g_positions.size(), 3, g_expandCloth);
+
+		//MyDrawCloth(&g_positions[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_clothColorRow, g_clothColorCol, g_expandCloth);
+		//BindSolidShader(g_lightPos, g_lightTarget, lightTransform, g_shadowTex, 0.0f, Vec4(g_clearColor, g_fogDistance));
 	}
 		
 
