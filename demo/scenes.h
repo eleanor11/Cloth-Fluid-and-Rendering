@@ -3831,7 +3831,7 @@ public:
 		g_drip = true;
 		g_markColor = false;
 
-		g_emitterWidth = 5;
+		g_emitterWidth = 3;
 
 		g_kAbsorption = 1.0;
 		g_kMaxAbsorption = 0.3;
@@ -3858,6 +3858,7 @@ public:
 		g_numPoints = dimx * dimy;
 
 		/*add end*/
+
 
 		{
 			int clothStart = 0;
@@ -3939,6 +3940,17 @@ public:
 		g_drawPoints = false;
 		g_drawSprings = false;
 		g_drawEllipsoids = true;
+
+
+		/*test*/
+		if (1) {
+			g_absorb = true;
+			g_diffuse = false;
+			g_drip = false;
+			g_markColor = true;
+			g_saturations[0] = g_maxSaturation;
+			g_saturations[1] = g_maxSaturation;
+		}
 	}
 
 	virtual void DoGui(){
@@ -3967,7 +3979,17 @@ public:
 			g_drip = !g_drip;
 		}
 
-		imguiLabel("Shader");
+		if (imguiCheck("Mark", bool(g_markColor != 0))) {
+			g_markColor = !g_markColor;
+		}
+
+		imguiSlider("k Absorption", &g_kAbsorption, 0.0, 1.0, 0.1);
+		imguiSlider("k Diffusion", &g_kDiffusion, 0.0, 1.0, 0.1);
+		imguiSlider("k Diffusion Gravity", &g_kDiffusionGravity, 0.0, 1.0, 0.1);
+
+		imguiSeparatorLine();
+
+		imguiLabel("Shader Control");
 		if (imguiCheck("Normal Shader", bool(g_shaderMode == 0))) {
 			g_shaderMode = 0;
 		}

@@ -1683,33 +1683,35 @@ void GLUTUpdate()
 		if (imguiCheck("Pause", g_pause))
 			g_pause = !g_pause;
 
-		imguiSeparatorLine();
-
-		if (imguiCheck("Wireframe", g_wireframe))
-			g_wireframe = !g_wireframe;
-
-		if (imguiCheck("Draw Points", g_drawPoints))
-			g_drawPoints = !g_drawPoints;
-
-		if (imguiCheck("Draw Fluid", g_drawEllipsoids))			
-			g_drawEllipsoids = !g_drawEllipsoids;
-
-		if (imguiCheck("Draw Mesh", g_drawMesh))
-		{
-			g_drawMesh = !g_drawMesh;
-			g_drawRopes = !g_drawRopes;
-		}
-
-		if (imguiCheck("Draw Springs", bool(g_drawSprings!=0)))
-			g_drawSprings = (g_drawSprings)?0:1;
-
-		imguiSeparatorLine();
-
-		// scene options
-		g_scenes[g_scene]->DoGui();
-
 		if (imguiButton("Reset Scene"))
 			Reset();
+
+		imguiSeparatorLine();
+
+		//if (imguiCheck("Wireframe", g_wireframe))
+		//	g_wireframe = !g_wireframe;
+
+		//if (imguiCheck("Draw Points", g_drawPoints))
+		//	g_drawPoints = !g_drawPoints;
+
+		//if (imguiCheck("Draw Fluid", g_drawEllipsoids))			
+		//	g_drawEllipsoids = !g_drawEllipsoids;
+
+		//if (imguiCheck("Draw Mesh", g_drawMesh))
+		//{
+		//	g_drawMesh = !g_drawMesh;
+		//	g_drawRopes = !g_drawRopes;
+		//}
+
+		//if (imguiCheck("Draw Springs", bool(g_drawSprings!=0)))
+		//	g_drawSprings = (g_drawSprings)?0:1;
+
+		//imguiSeparatorLine();
+
+
+		g_scenes[g_scene]->DoGui();
+
+
 
 		//imguiSeparatorLine();
 

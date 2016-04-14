@@ -1733,11 +1733,11 @@ Vec3 calculateCosTheta(int index) {
 	}
 	if (neighbours.y >= 0) {
 		Vec3 dir = g_triangleCenters[int(neighbours.y)] - g_triangleCenters[index];
-		t0 = (-dir.y) / (sqrt(sqr(dir.x) + sqr(dir.y) + sqr(dir.z)));
+		t1 = (-dir.y) / (sqrt(sqr(dir.x) + sqr(dir.y) + sqr(dir.z)));
 	}
 	if (neighbours.z >= 0) {
 		Vec3 dir = g_triangleCenters[int(neighbours.z)] - g_triangleCenters[index];
-		t0 = (-dir.y) / (sqrt(sqr(dir.x) + sqr(dir.y) + sqr(dir.z)));
+		t2 = (-dir.y) / (sqrt(sqr(dir.x) + sqr(dir.y) + sqr(dir.z)));
 	}
 	return Vec3(t0, t1, t2);
 }
@@ -1747,7 +1747,7 @@ void CalculateThetas() {
 	}
 
 	for (int i = 0; i < g_numTriangles; i++) {
-		g_thetas[i] = calculateCosTheta(2);
+		g_thetas[i] = calculateCosTheta(i);
 	}
 }
 
