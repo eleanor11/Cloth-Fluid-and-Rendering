@@ -468,6 +468,7 @@ void main()
 		cc = clothColorCol;
 	}
 
+
 	if (normal) {
 		float3 normal = normalize(texture2D(normalMap, gl_TexCoord[5].xy).xyz * 2 - 1);
 		float bit = texture2D(bitMap, gl_TexCoord[5].xy).x;
@@ -964,6 +965,134 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 		glUniform1i(glGetUniformLocation(s_diffuseProgram, "normal"), 0);
 	}
 }
+
+void MyDrawCloth(const Vec4* positions, const Vec4* colors, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, int cshader_mode, float cshader_kd, float cshader_a, float cshader_fresnelPowRow, float cshader_fresnelPowCol, float expand, bool twosided, bool smooth) {
+	if (!numTris)
+		return;
+
+	if (twosided)
+		glDisable(GL_CULL_FACE);
+
+	GLint program;
+	glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+
+	if (program == GLint(s_diffuseProgram))
+	{
+		GLint uBias = glGetUniformLocation(s_diffuseProgram, "bias");
+		glUniform1f(uBias, 0.0f);
+
+		GLint uExpand = glGetUniformLocation(s_diffuseProgram, "expand");
+		glUniform1f(uExpand, expand);
+	}
+
+	bool texFlag = LoadGLTextures("../../data/textures/mycloth.bmp", 0);
+	//bool normalFlag = loadNormalMap("LinenPlain");
+	bool normalFlag = loadNormalMap("CreprDeChine");
+	//bool normalFlag = loadNormalMap("PolyesterStainCharmeuseFront");
+	//bool normalFlag = loadNormalMap("PolyesterStainCharmeuseBack");
+
+	if (texFlag) {
+
+		glUseProgram(s_diffuseProgram);
+		glUniform1i(glGetUniformLocation(s_diffuseProgram, "texture"), 0);
+
+		GLint uTex = glGetUniformLocation(s_diffuseProgram, "tex");
+		glUniform1i(uTex, 1);
+
+		glActiveTexture(GL_TEXTURE1);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, myTex[0]);
+	}
+
+	if (normalFlag) {
+		glUseProgram(s_diffuseProgram);
+		glUniform1i(glGetUniformLocation(s_diffuseProgram, "normal"), 1);
+
+		GLint uTexB = glGetUniformLocation(s_diffuseProgram, "bitMap");
+		glUniform1i(uTexB, 2);
+		GLint uTexN = glGetUniformLocation(s_diffuseProgram, "normalMap");
+		glUniform1i(uTexN, 3);
+
+		glActiveTexture(GL_TEXTURE2);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, myTex[1]);
+
+		glActiveTexture(GL_TEXTURE3);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, myTex[2]);
+
+	}
+
+	glUniform1i(glGetUniformLocation(s_diffuseProgram, "shaderMode"), cshader_mode);
+	switch (cshader_mode)
+	{
+	case 0:
+		break;
+	case 1:
+		glUniform1f(glGetUniformLocation(s_diffuseProgram, "kd"), cshader_kd);
+		glUniform1f(glGetUniformLocation(s_diffuseProgram, "a"), cshader_a);
+		glUniform1f(glGetUniformLocation(s_diffuseProgram, "fresnelPowRow"), cshader_fresnelPowRow);
+		glUniform1f(glGetUniformLocation(s_diffuseProgram, "fresnelPowCol"), cshader_fresnelPowCol);
+		break;
+
+	default:
+		break;
+	}
+	glUniform1i(glGetUniformLocation(s_diffuseProgram, "clothColor"), 0);
+
+	//glColor3fv(colorRow);
+	//glSecondaryColor3fv(colorCol);
+
+
+	glVerify(glEnableClientState(GL_VERTEX_ARRAY));
+	glVerify(glEnableClientState(GL_NORMAL_ARRAY));
+	glVerify(glEnableClientState(GL_COLOR_ARRAY));
+	glVerify(glEnableClientState(GL_SECONDARY_COLOR_ARRAY));
+	glVerify(glEnableClientState(GL_TEXTURE_COORD_ARRAY));
+
+	glVerify(glVertexPointer(3, GL_FLOAT, sizeof(float) * 4, positions));
+	glVerify(glNormalPointer(GL_FLOAT, sizeof(float) * 4, normals));
+	glVerify(glColorPointer(3, GL_FLOAT, sizeof(float) * 4, colors));
+	glVerify(glSecondaryColorPointer(3, GL_FLOAT, sizeof(float) * 4, colors));
+	glVerify(glTexCoordPointer(3, GL_FLOAT, sizeof(float) * 3, uvs));
+
+	glVerify(glDrawElements(GL_TRIANGLES, numTris * 3, GL_UNSIGNED_INT, indices));
+
+	glVerify(glDisableClientState(GL_VERTEX_ARRAY));
+	glVerify(glDisableClientState(GL_NORMAL_ARRAY));
+	glVerify(glDisableClientState(GL_COLOR_ARRAY));
+	glVerify(glDisableClientState(GL_SECONDARY_COLOR_ARRAY));
+	glVerify(glDisableClientState(GL_TEXTURE_COORD_ARRAY));
+
+	if (twosided)
+		glEnable(GL_CULL_FACE);
+
+	if (program == GLint(s_diffuseProgram))
+	{
+		GLint uBias = glGetUniformLocation(s_diffuseProgram, "bias");
+		glUniform1f(uBias, gShadowBias);
+
+		GLint uExpand = glGetUniformLocation(s_diffuseProgram, "expand");
+		glUniform1f(uExpand, 0.0f);
+	}
+
+	if (texFlag) {
+		glActiveTexture(GL_TEXTURE1);
+		glDisable(GL_TEXTURE_2D);
+
+		glUniform1i(glGetUniformLocation(s_diffuseProgram, "texture"), 0);
+
+	}
+	if (normalFlag) {
+		glActiveTexture(GL_TEXTURE2);
+		glDisable(GL_TEXTURE_2D);
+		glActiveTexture(GL_TEXTURE3);
+		glDisable(GL_TEXTURE_2D);
+
+		glUniform1i(glGetUniformLocation(s_diffuseProgram, "normal"), 0);
+	}
+}
+
 
 /*add end*/
 
