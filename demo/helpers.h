@@ -1509,7 +1509,7 @@ float getMax(float x, float y) {
 void CalculateColors() {
 	float maxSaturation = g_maxSaturation * g_kMaxAbsorption;
 
-	Vec4 color = g_clothColor;
+	Vec4 color = Vec4(g_clothColor, 1.0f);
 	Vec4 colorBase = color / maxSaturation;
 
 	for (int i = 0; i < g_numPoints; i++) {
@@ -1562,7 +1562,7 @@ void CalculateMeshColors() {
 
 	float maxSaturation = g_maxSaturation * g_kMaxAbsorption;
 
-	Vec4 color = g_clothColor;
+	Vec4 color = Vec4(g_clothColor, 1.0f);
 	Vec4 colorBase = color / maxSaturation;
 
 	for (int i = 0; i < g_numPoints; i++) {

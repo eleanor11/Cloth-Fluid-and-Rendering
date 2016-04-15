@@ -3839,8 +3839,8 @@ public:
 		g_kDiffusionGravity = 0.2;
 
 		g_camInit = false;
-		g_camPos = Vec3(0.7f, 1.7f, 2.9f);
-		g_camAngle = Vec3(0.0f, -0.4f, 0.0f);
+		g_camPos = Vec3(0.65f, 1.75f, 1.75f);
+		g_camAngle = Vec3(0.25f, -0.5f, 0.0f);
 
 		g_dripBuffer.resize(0);
 		g_saturations.resize(0);
@@ -3933,6 +3933,8 @@ public:
 		e.mPos = Vec3(-0.25f, 1.75f, 0.5f);
 		e.mRight = Cross(e.mDir, Vec3(0.0f, 0.0f, 1.0f));
 		e.mSpeed = (g_params.mFluidRestDistance / (g_dt * 2.0f));
+		//e.mWidth = g_emitterWidth;
+		e.mWidth = 1;
 
 		g_emitters.push_back(e);
 
@@ -3943,13 +3945,17 @@ public:
 
 
 		/*test*/
-		if (1) {
+		if (0) {
 			g_absorb = true;
 			g_diffuse = false;
 			g_drip = false;
 			g_markColor = true;
 			g_saturations[0] = g_maxSaturation;
 			g_saturations[1] = g_maxSaturation;
+		}
+		if (1) {
+			g_shaderMode = -1;
+			
 		}
 	}
 
@@ -3979,9 +3985,6 @@ public:
 			g_drip = !g_drip;
 		}
 
-		if (imguiCheck("Mark", bool(g_markColor != 0))) {
-			g_markColor = !g_markColor;
-		}
 
 		imguiSlider("k Absorption", &g_kAbsorption, 0.0, 1.0, 0.1);
 		imguiSlider("k Diffusion", &g_kDiffusion, 0.0, 1.0, 0.1);
@@ -3989,28 +3992,39 @@ public:
 
 		imguiSeparatorLine();
 
+		imguiLabel("Cloth Color");
+
+		if (imguiCheck("Mark", bool(g_markColor != 0))) {
+			g_markColor = !g_markColor;
+		}
+
+		if (!g_markColor) {
+			imguiSlider("R", &g_clothColor.x, 0.0, 1.0, 0.1);
+			imguiSlider("G", &g_clothColor.y, 0.0, 1.0, 0.1);
+			imguiSlider("B", &g_clothColor.z, 0.0, 1.0, 0.1);
+			g_clothColorRow = g_clothColor;
+			g_clothColorCol = g_clothColor;
+		}
+		imguiSeparatorLine();
+
 		imguiLabel("Shader Control");
+
+		if (imguiCheck("No Shader", bool(g_shaderMode == -1))) {
+			g_shaderMode = -1;
+		}
 		if (imguiCheck("Normal Shader", bool(g_shaderMode == 0))) {
 			g_shaderMode = 0;
 		}
 		if (imguiCheck("Cloth Shader", bool(g_shaderMode == 1))) {
 			g_shaderMode = 1;
 		}
-
 		if (g_shaderMode == 1) {
 			imguiSlider("Fresnel Power Row", &g_cshader_fresnelPowRow, 0.1, 5.0, 0.5);
 			imguiSlider("Fresnel Power Col", &g_cshader_fresnelPowCol, 0.1, 5.0, 0.5);
 			imguiSlider("Kd", &g_cshader_kd, 0.0, 1.0, 0.1);
 			imguiSlider("A", &g_cshader_a, 0.0, 1.0, 0.1);
 		}
-
-
-		imguiLabel("Cloth Color");
-
-		imguiSlider("R", &g_clothColorRow.x, 0.0, 1.0, 0.1);
-		imguiSlider("G", &g_clothColorRow.y, 0.0, 1.0, 0.1);
-		imguiSlider("B", &g_clothColorRow.z, 0.0, 1.0, 0.1);
-		g_clothColorCol = g_clothColorRow;
+		
 
 		imguiSeparatorLine();
 

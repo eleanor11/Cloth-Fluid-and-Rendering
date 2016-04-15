@@ -200,7 +200,7 @@ FILE* g_ffmpeg;
 //fluid & cloth
 
 int colorFlag = -1;
-Vec4 g_clothColor;
+Vec3 g_clothColor;
 vector<Vec4> g_colors;
 vector<Vec4> g_markColors;
 
@@ -508,7 +508,7 @@ void Init(int scene, bool centerCamera=true)
 
 	/*set origin cloth color*/
 	g_clothRadius = 0.1 * 0.25f;
-	g_clothColor = Vec4(0.3f, 1.0f, 1.0f, 1.0f);
+	g_clothColor = Vec3(0.5f, 0.3f, 0.6f);
 	g_colors.resize(0);
 
 	g_markColors.push_back(Vec4(0.0, 0.0, 1.0, 1.0));
@@ -699,7 +699,7 @@ void Init(int scene, bool centerCamera=true)
 	g_anisotropy3.resize(maxParticles);
 	
 	// center camera on particles
-	if (centerCamera)
+	if (centerCamera && g_camInit)
 	{
 		g_camPos = Vec3((g_sceneLower.x+g_sceneUpper.x)*0.5f, min(g_sceneUpper.y*1.25f, 7.0f), g_sceneUpper.z + min(g_sceneUpper.y, 8.0f)*2.0f);
 		g_camAngle = Vec3(0.0f, -DegToRad(10.0f), 0.0f);
@@ -821,6 +821,9 @@ void GLUTUpdate()
 	// simple low-pass filter to reduce noise in the FPS counter
 	g_realdt = float(currentTime-lastTime)*0.8f + g_realdt*0.2f;
 	lastTime = currentTime;
+
+	//printVec3(g_camPos);
+	//printVec3(g_camAngle);
 	
 	if (!g_pause || g_step)	
 	{	
@@ -852,6 +855,12 @@ void GLUTUpdate()
 		// process emitters
 		if (g_emit)
 		{			
+			/*test*/
+			if (1) {
+				g_emit = false;
+			}
+
+
 			int activeCount = flexGetActiveCount(g_flex);
 
 			g_emitters[0].mDir = Normalize(forward+Vec3(0.0, 0.4f, 0.0f));
@@ -1247,14 +1256,17 @@ void GLUTUpdate()
 	//	DrawCloth(&g_positions[0], &g_normals[0],  g_uvs.size()?&g_uvs[0].x:NULL, &g_triangles[0], g_triangles.size()/3, g_positions.size(), 3, g_expandCloth);
 
 	if (g_drawCloth) {
-
 		CalculateColors();
-		//DrawClothColor(&g_positions[0], &g_colors[0], &g_normals[0], g_uvs.size() ? &g_uvs[0].x : NULL, &g_triangles[0], g_triangles.size() / 3, g_positions.size(), 3, g_expandCloth);
-		MyDrawCloth(&g_positions[0], &g_colors[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_expandCloth);
+		if (g_shaderMode < 0) {
+			DrawClothColor(&g_positions[0], &g_colors[0], &g_normals[0], g_uvs.size() ? &g_uvs[0].x : NULL, &g_triangles[0], g_triangles.size() / 3, g_positions.size(), 3, g_expandCloth);
+		}
+		else {
+			MyDrawCloth(&g_positions[0], &g_colors[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_expandCloth);
+			//MyDrawCloth(&g_positions[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_clothColorRow, g_clothColorCol, g_expandCloth);
+			BindSolidShader(g_lightPos, g_lightTarget, lightTransform, g_shadowTex, 0.0f, Vec4(g_clearColor, g_fogDistance));
 
-		//MyDrawCloth(&g_positions[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_clothColorRow, g_clothColorCol, g_expandCloth);
-		//BindSolidShader(g_lightPos, g_lightTarget, lightTransform, g_shadowTex, 0.0f, Vec4(g_clearColor, g_fogDistance));
-	}
+			}
+		}
 		
 
 	/*end*/
@@ -1689,28 +1701,32 @@ void GLUTUpdate()
 
 		imguiSeparatorLine();
 
-		//if (imguiCheck("Wireframe", g_wireframe))
-		//	g_wireframe = !g_wireframe;
-
-		//if (imguiCheck("Draw Points", g_drawPoints))
-		//	g_drawPoints = !g_drawPoints;
-
-		//if (imguiCheck("Draw Fluid", g_drawEllipsoids))			
-		//	g_drawEllipsoids = !g_drawEllipsoids;
-
-		//if (imguiCheck("Draw Mesh", g_drawMesh))
-		//{
-		//	g_drawMesh = !g_drawMesh;
-		//	g_drawRopes = !g_drawRopes;
-		//}
-
-		//if (imguiCheck("Draw Springs", bool(g_drawSprings!=0)))
-		//	g_drawSprings = (g_drawSprings)?0:1;
-
-		//imguiSeparatorLine();
-
 
 		g_scenes[g_scene]->DoGui();
+
+
+
+		if (imguiCheck("Wireframe", g_wireframe))
+			g_wireframe = !g_wireframe;
+
+		if (imguiCheck("Draw Points", g_drawPoints))
+			g_drawPoints = !g_drawPoints;
+
+		if (imguiCheck("Draw Fluid", g_drawEllipsoids))			
+			g_drawEllipsoids = !g_drawEllipsoids;
+
+		if (imguiCheck("Draw Mesh", g_drawMesh))
+		{
+			g_drawMesh = !g_drawMesh;
+			g_drawRopes = !g_drawRopes;
+		}
+
+		if (imguiCheck("Draw Springs", bool(g_drawSprings!=0)))
+			g_drawSprings = (g_drawSprings)?0:1;
+
+		imguiSeparatorLine();
+
+
 
 
 
