@@ -3816,8 +3816,8 @@ public:
 		float bendStiffness = 0.4f;
 		float shearStiffness = 0.4f;
 
-		int dimx = 32;
-		int dimy = 32;
+		int dimx = g_dx;
+		int dimy = g_dy;
 		//int dimx = 4;
 		//int dimy = 4;
 		float radius = 0.1f;
@@ -3933,8 +3933,8 @@ public:
 		e.mPos = Vec3(-0.25f, 1.75f, 0.5f);
 		e.mRight = Cross(e.mDir, Vec3(0.0f, 0.0f, 1.0f));
 		e.mSpeed = (g_params.mFluidRestDistance / (g_dt * 2.0f));
-		//e.mWidth = g_emitterWidth;
-		e.mWidth = 1;
+		e.mWidth = g_emitterWidth;
+		//e.mWidth = 1;
 
 		g_emitters.push_back(e);
 

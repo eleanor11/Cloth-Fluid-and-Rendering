@@ -61,6 +61,7 @@
     <ClInclude Include="..\..\helpers.h" />
     <ClInclude Include="..\..\imgui.h" />
     <ClInclude Include="..\..\imguiRenderGL.h" />
+    <ClInclude Include="..\..\mapGenerator.h" />
     <ClInclude Include="..\..\scenes.h" />
     <ClInclude Include="..\..\shaders.h" />
   </ItemGroup>
@@ -132,6 +133,8 @@
     <OutDir>..\..\..\bin\$(Platform)\</OutDir>
     <TargetExt>.exe</TargetExt>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>D:\tool\opencv3.0\build\include;D:\tool\opencv3.0\build\include\opencv;D:\tool\opencv3.0\build\include\opencv2;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\tool\opencv3.0\build\x86\vc12\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -200,7 +203,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>flexRelease_x86.lib;cuda.lib;cudart.lib;glew32.lib;freeglut.lib;glaux.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>flexRelease_x86.lib;cuda.lib;cudart.lib;glew32.lib;freeglut.lib;glaux.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;opencv_ts300.lib;opencv_world300.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\..\lib\$(Platform);..\..\..\external\freeglut\lib;..\..\..\external\glew\lib\win32;$(CUDA_PATH)\lib\win32</AdditionalLibraryDirectories>
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
     </Link>

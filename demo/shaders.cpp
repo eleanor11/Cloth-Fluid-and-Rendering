@@ -256,6 +256,7 @@ uniform bool texture;
 /*added by eleanor*/
 uniform sampler2D bitMap;
 uniform sampler2D normalMap;
+uniform sampler2D saturationMap;
 
 uniform bool normal;
 
@@ -440,6 +441,7 @@ void main()
 	vec3 cr = color;
 	vec3 cc = color;
 
+
 	if (texture)
 	{
 		
@@ -468,10 +470,15 @@ void main()
 		cc = clothColorCol;
 	}
 
+	
 
 	if (normal) {
 		float3 normal = normalize(texture2D(normalMap, gl_TexCoord[5].xy).xyz * 2 - 1);
 		float bit = texture2D(bitMap, gl_TexCoord[5].xy).x;
+		float saturation = texture2D(saturationMap, gl_TexCoord[5].xy).x;
+
+		cr = cr * (1.0 - saturation);
+		cc = cc * (1.0 - saturation);
 
 		if (shaderMode == 1) {
 			color = clothShader(cr, cc, normal, bit);
@@ -780,7 +787,7 @@ void DrawClothColor(const Vec4* positions, const Vec4* colors, const Vec4* norma
 }
 
 
-const int nTex = 3;
+const int nTex = 4;
 GLuint myTex[nTex];
 
 AUX_RGBImageRec *LoadBMP(const char *Filename){
@@ -836,13 +843,15 @@ bool loadNormalMap(std::string name) {
 	std::string path = "../../data/textures/";
 	std::string bname = path + "b" + name + ".bmp";
 	std::string nname = path + "n" + name + ".bmp";
+	std::string sname = path + "s" + name + ".bmp";
 	bool result = LoadGLTextures(bname.c_str(), 1);
 	result = result && LoadGLTextures(nname.c_str(), 2);
+	result = result && LoadGLTextures(sname.c_str(), 3);
 
 	return result;
 }
 
-void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, int cshader_mode, float cshader_kd, float cshader_a, float cshader_fresnelPowRow, float cshader_fresnelPowCol, Vec3 colorRow, Vec3 colorCol, float expand, bool twosided, bool smooth)
+void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, std::string clothStyle, int cshader_mode, float cshader_kd, float cshader_a, float cshader_fresnelPowRow, float cshader_fresnelPowCol, Vec3 colorRow, Vec3 colorCol, float expand, bool twosided, bool smooth)
 {
 	if (!numTris)
 		return;
@@ -862,9 +871,10 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 		glUniform1f(uExpand, expand);
 	}
 
-	bool texFlag = LoadGLTextures("../../data/textures/mycloth.bmp", 0);
+	bool texFlag = LoadGLTextures("../../data/textures/mycloth1.bmp", 0);
+	bool normalFlag = loadNormalMap(clothStyle);
 	//bool normalFlag = loadNormalMap("LinenPlain");
-	bool normalFlag = loadNormalMap("CreprDeChine");
+	//bool normalFlag = loadNormalMap("CreprDeChine");
 	//bool normalFlag = loadNormalMap("PolyesterStainCharmeuseFront");
 	//bool normalFlag = loadNormalMap("PolyesterStainCharmeuseBack");
 	
@@ -889,6 +899,8 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 		glUniform1i(uTexB, 2);
 		GLint uTexN = glGetUniformLocation(s_diffuseProgram, "normalMap");
 		glUniform1i(uTexN, 3);
+		GLint uTexS = glGetUniformLocation(s_diffuseProgram, "saturationMap");
+		glUniform1i(uTexS, 5);
 
 		glActiveTexture(GL_TEXTURE2);
 		glEnable(GL_TEXTURE_2D);
@@ -897,6 +909,10 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 		glActiveTexture(GL_TEXTURE3);
 		glEnable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, myTex[2]);
+
+		glActiveTexture(GL_TEXTURE5);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, myTex[3]);
 
 	}
 
@@ -961,12 +977,14 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 		glDisable(GL_TEXTURE_2D);
 		glActiveTexture(GL_TEXTURE3);
 		glDisable(GL_TEXTURE_2D);
+		glActiveTexture(GL_TEXTURE5);
+		glDisable(GL_TEXTURE_2D);
 
 		glUniform1i(glGetUniformLocation(s_diffuseProgram, "normal"), 0);
 	}
 }
 
-void MyDrawCloth(const Vec4* positions, const Vec4* colors, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, int cshader_mode, float cshader_kd, float cshader_a, float cshader_fresnelPowRow, float cshader_fresnelPowCol, float expand, bool twosided, bool smooth) {
+void MyDrawCloth(const Vec4* positions, const Vec4* colors, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, std::string clothStyle, int cshader_mode, float cshader_kd, float cshader_a, float cshader_fresnelPowRow, float cshader_fresnelPowCol, float expand, bool twosided, bool smooth) {
 	if (!numTris)
 		return;
 
@@ -986,8 +1004,9 @@ void MyDrawCloth(const Vec4* positions, const Vec4* colors, const Vec4* normals,
 	}
 
 	bool texFlag = LoadGLTextures("../../data/textures/mycloth.bmp", 0);
+	bool normalFlag = loadNormalMap(clothStyle);
 	//bool normalFlag = loadNormalMap("LinenPlain");
-	bool normalFlag = loadNormalMap("CreprDeChine");
+	//bool normalFlag = loadNormalMap("CreprDeChine");
 	//bool normalFlag = loadNormalMap("PolyesterStainCharmeuseFront");
 	//bool normalFlag = loadNormalMap("PolyesterStainCharmeuseBack");
 

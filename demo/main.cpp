@@ -47,6 +47,12 @@
 #include "imgui.h"
 #include "imguiRenderGL.h"
 
+/*added by eleanor*/
+
+#include "mapGenerator.h"
+
+/*add end*/
+
 using namespace std;
 
 int g_screenWidth = 1280;
@@ -204,7 +210,6 @@ Vec3 g_clothColor;
 vector<Vec4> g_colors;
 vector<Vec4> g_markColors;
 
-
 int g_dx;
 int g_dy;
 int g_dz;
@@ -254,6 +259,12 @@ float g_cshader_fresnelPowCol;
 
 Vec3 g_clothColorRow;
 Vec3 g_clothColorCol;
+
+
+//maps
+string g_clothStyle;
+vector<float> g_saturationsSmall;
+Maps g_maps;
 
 /*added end*/
 
@@ -319,7 +330,6 @@ vector<Rope> g_ropes;
 inline float sqr(float x) { return x*x; }
 
 #define cudaCheck(x) { cudaError_t err = x; if (err != cudaSuccess) { printf("Cuda error: %d in %s at %s:%d\n", err, #x, __FILE__, __LINE__); assert(0); } }
-
 
 #include "helpers.h"
 #include "scenes.h"
@@ -524,9 +534,8 @@ void Init(int scene, bool centerCamera=true)
 	g_markColors.push_back(Vec4(1.0, 0.0, 0.0, 1.0));
 
 
-
-	g_dx = 0;
-	g_dy = 0; 
+	g_dx = DIMX;
+	g_dy = DIMY; 
 	g_dz = 0;
 
 	g_numPoints = 0;
@@ -539,7 +548,7 @@ void Init(int scene, bool centerCamera=true)
 	g_kDiffusion = 0.0;
 	g_kDiffusionGravity = 0.0;
 
-	g_maxSaturation = 10.0;
+	g_maxSaturation = MAXSATURATION;
 	g_absorbable.resize(0);
 	g_emitTime.resize(0);
 
@@ -569,6 +578,12 @@ void Init(int scene, bool centerCamera=true)
 
 	g_clothColorRow = Vec3(0.5, 0.3, 0.6);
 	g_clothColorCol = Vec3(0.5, 0.3, 0.6);
+
+
+	//maps
+	g_clothStyle = "CreprDeChine";
+	g_maps = Maps(512, g_clothStyle);
+	g_saturationsSmall.resize(0);
 
 	/*added end*/
 
@@ -856,7 +871,7 @@ void GLUTUpdate()
 		if (g_emit)
 		{			
 			/*test*/
-			if (1) {
+			if (0) {
 				g_emit = false;
 			}
 
@@ -1256,13 +1271,16 @@ void GLUTUpdate()
 	//	DrawCloth(&g_positions[0], &g_normals[0],  g_uvs.size()?&g_uvs[0].x:NULL, &g_triangles[0], g_triangles.size()/3, g_positions.size(), 3, g_expandCloth);
 
 	if (g_drawCloth) {
-		CalculateColors();
 		if (g_shaderMode < 0) {
+			CalculateColors();
 			DrawClothColor(&g_positions[0], &g_colors[0], &g_normals[0], g_uvs.size() ? &g_uvs[0].x : NULL, &g_triangles[0], g_triangles.size() / 3, g_positions.size(), 3, g_expandCloth);
 		}
 		else {
-			MyDrawCloth(&g_positions[0], &g_colors[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_expandCloth);
-			//MyDrawCloth(&g_positions[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_clothColorRow, g_clothColorCol, g_expandCloth);
+			//CalculateColors();
+			//MyDrawCloth(&g_positions[0], &g_colors[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_clothStyle, g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_expandCloth);
+			
+			g_maps.writeToFile();
+			MyDrawCloth(&g_positions[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_clothStyle, g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_clothColorRow, g_clothColorCol, g_expandCloth);
 			BindSolidShader(g_lightPos, g_lightTarget, lightTransform, g_shadowTex, 0.0f, Vec4(g_clearColor, g_fogDistance));
 
 			}
@@ -2438,7 +2456,7 @@ void APIENTRY glErrorCallback( GLenum _source,
 } 
 #endif
 
-void ErrorCallback(const char* msg, const char* file, int line)
+void fErrorCallback(const char* msg, const char* file, int line)
 {
 	printf("Flex: %s - %s:%d\n", msg, file, line);
 	assert(0);
@@ -2602,7 +2620,7 @@ int main(int argc, char* argv[])
 	}
 
 	glewInit();
-	FlexError err = flexInit(FLEX_VERSION, ErrorCallback);
+	FlexError err = flexInit(FLEX_VERSION, fErrorCallback);
 
 	if (err != eFlexErrorNone)
 	{

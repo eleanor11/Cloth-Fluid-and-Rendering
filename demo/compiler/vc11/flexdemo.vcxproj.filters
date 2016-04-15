@@ -107,6 +107,7 @@
     <ClInclude Include="..\..\container.h" />
     <ClInclude Include="..\..\imguiRenderGL.h" />
     <ClInclude Include="..\..\imgui.h" />
+    <ClInclude Include="..\..\mapGenerator.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">

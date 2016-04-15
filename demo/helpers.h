@@ -28,6 +28,8 @@
 
 #include <stdarg.h>
 
+
+
 float SampleSDF(const float* sdf, int dim, int x, int y, int z)
 {
 	assert(x < dim && x >= 0);
@@ -696,6 +698,7 @@ void CreateSDF2(const char* meshFile, float scale, Vec3 lower, float expand = 0.
 		g_numTriangles = mesh->GetNumFaces();
 
 		g_saturations.resize(g_numTriangles, 0.0);
+		g_saturationsSmall.resize(g_numPoints * 4, 0.0);
 		g_triangleNeighbours.resize(g_numTriangles, Vec3(-1.0, -1.0, -1.0));
 
 		g_pointTriangleNums = mesh->m_pointTriangleNums;
@@ -978,6 +981,12 @@ void CreateSpringGrid2(Vec3 lower, int dx, int dy, int dz, float radius, int pha
 
 					g_saturations.push_back(0.0);
 					g_saturations.push_back(0.0);
+
+
+					g_saturationsSmall.push_back(0.0);
+					g_saturationsSmall.push_back(0.0);
+					g_saturationsSmall.push_back(0.0);
+					g_saturationsSmall.push_back(0.0);
 
 					g_triangleNeighbours.push_back(Vec3(-1.0, -1.0, -1.0));
 					g_triangleNeighbours.push_back(Vec3(-1.0, -1.0, -1.0));
@@ -1608,7 +1617,7 @@ void CalculateMeshColors() {
 
 
 //absorb
-bool Collide(int i, int j) {
+bool Collide(int i, int j, Vec2 &pos) {
 	Vec4 posX = g_positions[i];
 	Vec4 posY = g_positions[j];
 
@@ -1619,7 +1628,10 @@ bool Collide(int i, int j) {
 	float dist = sqrt(sqr(posX.x - posY.x) + sqr(posX.y - posY.y) + sqr(posX.z - posY.z));
 
 	if (dist <= g_params.mSolidRestDistance) {
-		/*TODO: get the collide position*/
+		if (posX.x < posY.x) pos.x = 0;
+		else pos.x = 1;
+		if (posX.z < posY.z) pos.y = 0;
+		else pos.y = 1;
 
 		return true;
 	}
@@ -1627,7 +1639,7 @@ bool Collide(int i, int j) {
 	return false;
 
 }
-void UpdateSaturations(int idx) {
+void UpdateSaturations(int idx, Vec2 pos) {
 	int num = g_pointTriangleNums[idx];
 
 	Vec4 tmp1 = g_pointTriangles[idx * 2];
@@ -1656,6 +1668,7 @@ void UpdateSaturations(int idx) {
 	default:
 		break;
 	}
+	g_maps.renewSaturation(idx / g_dx, idx % g_dy, pos, g_mDrip);
 }
 
 void Absorbing() {
@@ -1664,8 +1677,9 @@ void Absorbing() {
 	int i = g_numSolidParticles;
 	while (i < activeCount) {
 		int collidePosition = -1;
+		Vec2 pos;
 		for (int j = 0; j < g_numSolidParticles; j++) {
-			if (Collide(i, j)) {
+			if (Collide(i, j, pos)) {
 				collidePosition = j;
 				break;
 			}
@@ -1681,7 +1695,7 @@ void Absorbing() {
 			}
 
 			//cloth position j
-			UpdateSaturations(collidePosition);
+			UpdateSaturations(collidePosition, pos);
 
 			//fluid point i
 			g_positions[i] = g_positions[activeCount - 1];
