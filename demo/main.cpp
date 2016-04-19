@@ -263,7 +263,6 @@ Vec3 g_clothColorCol;
 
 //maps
 string g_clothStyle;
-vector<float> g_saturationsSmall;
 Maps g_maps;
 
 /*added end*/
@@ -583,7 +582,6 @@ void Init(int scene, bool centerCamera=true)
 	//maps
 	g_clothStyle = "CreprDeChine";
 	g_maps = Maps(512, g_clothStyle);
-	g_saturationsSmall.resize(0);
 
 	/*added end*/
 

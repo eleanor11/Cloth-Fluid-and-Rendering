@@ -698,7 +698,6 @@ void CreateSDF2(const char* meshFile, float scale, Vec3 lower, float expand = 0.
 		g_numTriangles = mesh->GetNumFaces();
 
 		g_saturations.resize(g_numTriangles, 0.0);
-		g_saturationsSmall.resize(g_numPoints * 4, 0.0);
 		g_triangleNeighbours.resize(g_numTriangles, Vec3(-1.0, -1.0, -1.0));
 
 		g_pointTriangleNums = mesh->m_pointTriangleNums;
@@ -981,12 +980,6 @@ void CreateSpringGrid2(Vec3 lower, int dx, int dy, int dz, float radius, int pha
 
 					g_saturations.push_back(0.0);
 					g_saturations.push_back(0.0);
-
-
-					g_saturationsSmall.push_back(0.0);
-					g_saturationsSmall.push_back(0.0);
-					g_saturationsSmall.push_back(0.0);
-					g_saturationsSmall.push_back(0.0);
 
 					g_triangleNeighbours.push_back(Vec3(-1.0, -1.0, -1.0));
 					g_triangleNeighbours.push_back(Vec3(-1.0, -1.0, -1.0));
@@ -1503,15 +1496,15 @@ void CalculateTriangleNeighbours() {
 	}
 }
 
-float getMin(float x, float y) {
-	if (x < y) return x;
-	else return y;
-}
-
-float getMax(float x, float y) {
-	if (x > y) return x;
-	else return y;
-}
+//float getMin(float x, float y) {
+//	if (x < y) return x;
+//	else return y;
+//}
+//
+//float getMax(float x, float y) {
+//	if (x > y) return x;
+//	else return y;
+//}
 
 //colors
 
@@ -1668,10 +1661,14 @@ void UpdateSaturations(int idx, Vec2 pos) {
 	default:
 		break;
 	}
-	g_maps.renewSaturation(idx / g_dx, idx % g_dy, pos, g_mDrip);
+
+	g_maps.renewAbsorbing(idx / g_dx, idx % g_dy, pos, g_mDrip);
 }
 
 void Absorbing() {
+	g_maps.renewAbsorbing(3, 3, Vec2(1, 0), g_mDrip);
+	g_maps.renewAbsorbing(3, 3, Vec2(1, 1), g_mDrip);
+
 	int activeCount = flexGetActiveCount(g_flex);
 
 	int i = g_numSolidParticles;
@@ -1816,6 +1813,8 @@ void Diffusing() {
 			g_saturations[i] = 0;
 		}
 	}
+
+	g_maps.renewDiffusing(g_kDiffusion, g_kDiffusionGravity);
 
 }
 

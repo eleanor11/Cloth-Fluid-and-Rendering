@@ -3945,16 +3945,16 @@ public:
 
 
 		/*test*/
-		if (0) {
+		if (1) {
 			g_absorb = true;
 			g_diffuse = false;
 			g_drip = false;
-			g_markColor = true;
-			g_saturations[0] = g_maxSaturation;
-			g_saturations[1] = g_maxSaturation;
+			g_markColor = false;
+			//g_saturations[0] = g_maxSaturation;
+			//g_saturations[1] = g_maxSaturation;
 		}
 		if (1) {
-			g_shaderMode = -1;
+			g_shaderMode = 1;
 			
 		}
 	}
