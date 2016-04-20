@@ -72,11 +72,11 @@ public:
 		int sy = y * 2 + int(pos.y) - 1;
 		//std::cout << x << ' ' << y << ' ' << sx << ' ' << sy << ' ';
 		if (sx < 0) sx = 0;
-		if (sx >= dx) sx = dx - 1;
+		if (sx >= rows) sx = rows - 1;
 		if (sy < 0) sy = 0;
-		if (sy >= dy) sy = dy - 1;
+		if (sy >= cols) sy = cols - 1;
 
-		int t = sx * dy + sy;
+		int t = sx * cols + sy;
 		//std::cout << mx << ' ' << my << std::endl;
 		//std::cout << bmat.channels() << std::endl;
 		//std::cout << t << std::endl;
@@ -89,8 +89,13 @@ public:
 			saturationCol[t] += s;
 			//std::cout << saturationCol[sx * DIMX * 2 + sy] << std::endl;
 		}
+		else {
+			std::cout << "no\n";
+		}
 	}
-
+	void renewPointTheta(int i, Vec4 thetas) {
+		pointThetas[i] = thetas;
+	}
 	void renewDiffusing(float kDiffusion, float kDiffusionGravity) {
 		Diffusing(kDiffusion, kDiffusionGravity );
 	}
@@ -101,8 +106,10 @@ private:
 	std::vector<float> saturationRow, saturationCol;
 	std::vector<int> bitMap;
 
+	std::vector<Vec4> pointThetas;
+
 	int scale;
-	int dx, dy;
+	int rows, cols;
 	int saturationSize;
 	int lineWidth = 1;
 	std::string name;
@@ -114,12 +121,13 @@ private:
 		initiateSaturation();
 		kDiffusionSide = 0.01;
 		kDiffusionLevel = 0.005;
+		pointThetas.resize(DIMX * DIMY);
 	}
 
 	void initiateSaturation() {
-		dx = (DIMX - 1) * 2; 
-		dy = (DIMY - 1) * 2;
-		saturationSize = dx * dy;
+		rows = (DIMX - 1) * 2; 
+		cols = (DIMY - 1) * 2;
+		saturationSize = rows * cols;
 		saturationRow.resize(saturationSize, 0);
 		saturationCol.resize(saturationSize, 0);
 		
@@ -134,8 +142,8 @@ private:
 
 	void renewSaturationMap() {
 		int idx = 0;
-		for (int i = 0; i < dx; i++) {
-			for (int j = 0; j < dy; j++) {
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < cols; j++) {
 				float t = 0;
 				if (bitMap[idx] == 0) {
 					t = saturationRow[idx];
@@ -161,8 +169,8 @@ private:
 
 		bitMap.resize(saturationSize, 0);
 		int idx = 0;
-		for (int i = 0; i < dx; i++) {
-			for (int j = 0; j < dy; j++) {
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < cols; j++) {
 				int bit = (int)(bmat.at<cv::Vec3b>(i * 8 + 4, j * 8 + 4)[0]);
 				bitMap[idx++] = bit;
 			}
@@ -196,31 +204,37 @@ private:
 			float si = saturationRow[i];
 			float ds1 = 0, ds2 = 0, ds3 = 0, ds4 = 0, ds5 = 0;
 
-			int x = i / dy;
-			int y = i % dy;
+			int x = i / cols;
+			int y = i % cols;
 
-			/*TODO: add gravity theta*/
+			Vec4 thetas = pointThetas[(x + 1) / 2, (y + 1) / 2];
+			float theta = 0;
+			if (bitMap[i] == 0){
+				theta = 1;
+			}
+
+			/*TODO: solve problem: next is empty*/
 			//row self
 			if (y > 0) {
-				ds1 = getMax(0.0, kDiffusion * (si - saturationRow[i - 1]));
+				ds1 = getMax(0.0, kDiffusion * (si - saturationRow[i - 1]) + kDiffusionGravity * si * thetas[0]);
 				sum += ds1;
 			}
-			if (y < dy - 1) {
-				ds2 = getMax(0.0, kDiffusion * (si - saturationRow[i + 1]));
+			if (y < cols - 1) {
+				ds2 = getMax(0.0, kDiffusion * (si - saturationRow[i + 1]) + kDiffusionGravity * si * thetas[1]);
 				sum += ds2;
 			}
 			//row side
 			if (x > 0) {
-				ds3 = getMax(0.0, kDiffusion * kDiffusionSide * (si - saturationRow[i - dy]));
+				ds3 = getMax(0.0, kDiffusionSide * (kDiffusion * (si - saturationRow[i - cols]) + kDiffusionGravity * si * thetas[2]));
 				sum += ds3;
 			}
-			if (x < dx - 1) {
-				ds4 = getMax(0.0, kDiffusion * kDiffusionSide * (si - saturationRow[i + dy]));
+			if (x < rows - 1) {
+				ds4 = getMax(0.0, kDiffusionSide * (kDiffusion * (si - saturationRow[i + cols]) + kDiffusionGravity * si * thetas[3]));
 				sum += ds4;
 			}
 			//row level
 			{
-				ds5 = getMax(0.0, kDiffusion * kDiffusionLevel * (si - saturationCol[i]));
+				ds5 = getMax(0.0, kDiffusionLevel * (kDiffusion * (si - saturationCol[i]) + kDiffusionGravity * si * theta));
 			}
 
 			float normFac = 1.0;
@@ -232,17 +246,17 @@ private:
 				deltasRow[i] += -normFac * ds1;
 				deltasRow[i - 1] += normFac * ds1;
 			}
-			if (y < dy - 1) {
+			if (y < cols - 1) {
 				deltasRow[i] += -normFac * ds2;
 				deltasRow[i + 1] += normFac * ds2;
 			}
 			if (x > 0) {
 				deltasRow[i] += -normFac * ds3;
-				deltasRow[i - dy] += normFac * ds3;
+				deltasRow[i - cols] += normFac * ds3;
 			}
-			if (x < dx - 1) {
+			if (x < rows - 1) {
 				deltasRow[i] += -normFac * ds4;
-				deltasRow[i + dy] += normFac * ds4;
+				deltasRow[i + cols] += normFac * ds4;
 			}
 			{
 				deltasRow[i] += -normFac * ds5;
@@ -256,31 +270,37 @@ private:
 			float si = saturationCol[i];
 			float ds1 = 0, ds2 = 0, ds3 = 0, ds4 = 0, ds5 = 0;
 
-			int x = i / dx;
-			int y = i % dy;
+			int x = i / cols;
+			int y = i % cols;
 
-			/*TODO: add gravity theta*/
+			Vec4 thetas = pointThetas[(x + 1) / 2, (y + 1) / 2];
+			float theta = 0;
+			if (bitMap[i] == 255){
+				theta = 1;
+			}
+
+			/*TODO: solve problem: next is empty*/
 			//col self
 			if (x > 0) {
-				ds1 = getMax(0.0, kDiffusion * (si - saturationCol[i - dy]));
+				ds1 = getMax(0.0, kDiffusion * (si - saturationCol[i - cols]) + kDiffusionGravity * si * thetas[2]);
 				sum += ds1;
 			}
-			if (x < dx - 1) {
-				ds2 = getMax(0.0, kDiffusion * (si - saturationCol[i + dy]));
+			if (x < rows - 1) {
+				ds2 = getMax(0.0, kDiffusion * (si - saturationCol[i + cols]) + kDiffusionGravity * si * thetas[3]);
 				sum += ds2;
 			}
 			//col side
 			if (y > 0) {
-				ds3 = getMax(0.0, kDiffusion * kDiffusionSide * (si - saturationCol[i - 1]));
+				ds3 = getMax(0.0, kDiffusionSide * (kDiffusion * (si - saturationCol[i - 1]) + kDiffusionGravity * si * thetas[0]));
 				sum += ds3;
 			}
-			if (y < dy - 1) {
-				ds4 = getMax(0.0, kDiffusion * kDiffusionSide * (si - saturationCol[i + 1]));
+			if (y < cols - 1) {
+				ds4 = getMax(0.0, kDiffusionSide * (kDiffusion * (si - saturationCol[i + 1]) + kDiffusionGravity * si * thetas[1]));
 				sum += ds4;
 			}
 			//col level
 			{
-				ds5 = getMax(0.0, kDiffusion * kDiffusionLevel * (si - saturationRow[i]));
+				ds5 = getMax(0.0, kDiffusionLevel * (kDiffusion * (si - saturationRow[i]) + kDiffusionGravity * si * theta));
 				sum += ds5;
 			}
 
@@ -292,17 +312,17 @@ private:
 
 			if (x > 0) {
 				deltasCol[i] += -normFac * ds1;
-				deltasCol[i - dy] += normFac * ds1;
+				deltasCol[i - cols] += normFac * ds1;
 			}
-			if (x < dx - 1) {
+			if (x < rows - 1) {
 				deltasCol[i] += -normFac * ds2;
-				deltasCol[i + dy] += normFac * ds2;
+				deltasCol[i + cols] += normFac * ds2;
 			}
 			if (y > 0) {
 				deltasCol[i] += -normFac * ds3;
 				deltasCol[i - 1] += normFac * ds3;
 			}
-			if (y < dy - 1) {
+			if (y < cols - 1) {
 				deltasCol[i] += -normFac * ds4;
 				deltasCol[i + 1] += normFac * ds4;
 			}

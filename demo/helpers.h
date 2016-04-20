@@ -1632,6 +1632,8 @@ bool Collide(int i, int j, Vec2 &pos) {
 		if (posX.z < posY.z) pos.y = 0;
 		else pos.y = 1;
 
+		//cout << pos.x << ' ' << pos.y << endl;
+
 		return true;
 	}
 
@@ -1668,7 +1670,7 @@ void UpdateSaturations(int idx, Vec2 pos) {
 		break;
 	}
 
-	g_maps.renewAbsorbing(idx / g_dx, idx % g_dy, pos, g_mDrip);
+	g_maps.renewAbsorbing(idx / g_dy, idx % g_dy, pos, g_mDrip);
 }
 
 void Absorbing() {
@@ -1759,6 +1761,13 @@ Vec3 calculateCosTheta(int index) {
 	}
 	return Vec3(t0, t1, t2);
 }
+float calculateCosTheta(int i, int x) {
+	if (x < 0) return 10.0;
+	if (x >= g_numPoints) return 10.0;
+
+	Vec3 dir = g_positions[x] - g_positions[i];
+	return (-dir.y) / (sqrt(sqr(dir.x) + sqr(dir.y) + sqr(dir.z)));
+}
 void CalculateThetas() {
 	if (g_triangleThetas.size() == 0) {
 		g_triangleThetas.resize(g_numTriangles);
@@ -1766,6 +1775,22 @@ void CalculateThetas() {
 
 	for (int i = 0; i < g_numTriangles; i++) {
 		g_triangleThetas[i] = calculateCosTheta(i);
+	}
+
+	//pointThetas
+	for (int i = 0; i < g_numPoints; i++) {
+		Vec4 thetas;
+		thetas[0] = calculateCosTheta(i, i - 1);	//right
+		thetas[1] = calculateCosTheta(i, i + 1);	//left
+		thetas[2] = calculateCosTheta(i, i - g_dy);	//up
+		thetas[3] = calculateCosTheta(i, i + g_dy);	//down
+
+		if (thetas[0] == 10) thetas[0] = thetas[1];
+		if (thetas[1] == 10) thetas[1] = thetas[0];
+		if (thetas[2] == 10) thetas[2] = thetas[3];
+		if (thetas[3] == 10) thetas[3] = thetas[2];
+
+		g_maps.renewPointTheta(i, thetas);
 	}
 }
 

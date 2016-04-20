@@ -383,10 +383,13 @@ vec3 normalShader(vec3 cr, vec3 cc, float3 normal, float bit) {
 
 	float difLight = abs(dot(normal, lightDir));
 
-	if (bit == 0) {
+	float tmp = 0.05;
+	//if (bit == 0) {
+	if (bit < 0.5 - tmp) {
 		color = cr * difLight;
 	}
-	else if (bit == 1) {
+	//else if (bit == 1) {
+	else if (bit > 0.5 + tmp) {
 		color = cc * difLight;
 	}
 
@@ -404,12 +407,15 @@ vec3 clothShader(vec3 cr, vec3 cc, float3 normal, float bit) {
 	float3 t = float3(0.0, 0.0, 0.0);
 	float fresnelPow = 0.0;
 
-	if (bit == 0){
+	float tmp = 0.1;
+	//if (bit == 0) {
+	if (bit < 0.5 - tmp) {
 		t = float3(1.0, 0.0, 0.0);
 		fresnelPow = fresnelPowRow;
 		color = cr;
 	}
-	else if (bit == 1) {
+	//else if (bit == 1) {
+	else if (bit > 0.5 + tmp) {
 		t = float3(0.0, 1.0, 0.0);
 		fresnelPow = fresnelPowCol;
 		color = cc;

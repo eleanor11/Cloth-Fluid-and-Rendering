@@ -233,7 +233,6 @@ vector<float> g_saturations;
 vector<Vec3> g_triangleCenters;
 vector<Vec3> g_triangleNeighbours;
 vector<Vec3> g_triangleThetas;
-vector<Vec4> g_pointThetas;
 
 vector<int> g_pointTriangleNums;
 vector<Vec4> g_pointTriangles;
