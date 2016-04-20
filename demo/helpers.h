@@ -791,9 +791,9 @@ void CreateSpringGrid(Vec3 lower, int dx, int dy, int dz, float radius, int phas
 				
 				/*added by eleanor*/
 
-				//g_uvs.push_back(Vec3((float)x / dx * 8, (float)y / dy * 8, 0.0));
+				g_uvs.push_back(Vec3((float)x / dx * 8, (float)y / dy * 8, 0.0));
 				//g_uvs.push_back(Vec3((float)x / dx * 4, (float)y / dy * 4, 0.0));
-				g_uvs.push_back(Vec3((float)x / dx, (float)y / dy, 0.0));
+				//g_uvs.push_back(Vec3((float)x / dx, (float)y / dy, 0.0));
 
 				/*add end*/
 
@@ -942,9 +942,15 @@ void CreateSpringGrid2(Vec3 lower, int dx, int dy, int dz, float radius, int pha
 
 				/*add begin*/
 
-				//g_uvs.push_back(Vec3((float)x / dx * 8, (float)y / dy * 8, 0.0));
-				//g_uvs.push_back(Vec3((float)x / dx * 4, (float)y / dy * 4, 0.0));
-				g_uvs.push_back(Vec3((float)x / dx, (float)y / dy, 0.0));
+				//g_uvs.push_back(Vec3((float)x / (dx - 1) * 16, (float)y / (dy - 1) * 16, 0.0));
+				//g_uvs.push_back(Vec3((float)x / (dx - 1) * 8, (float)y / (dy - 1) * 8, 0.0));
+				//g_uvs.push_back(Vec3((float)x / (dx - 1) * 4, (float)y / (dy - 1) * 4, 0.0));
+				//g_uvs.push_back(Vec3((float)x / (dx - 1), (float)y / (dy - 1), 0.0));
+
+				//g_uvs.push_back(Vec3((float)x / dx * 16, (float)(dy - 1 - y) / dy * 16, 0.0));
+				//g_uvs.push_back(Vec3((float)x / dx * 8, (float)(dy - 1 - y) / dy * 8, 0.0));
+				//g_uvs.push_back(Vec3((float)x / dx * 4, (float)(dy - 1 - y) / dy * 4, 0.0));
+				g_uvs.push_back(Vec3((float)x / dx, (float)(dy - y) / dy, 0.0));
 
 				int i = GridIndex(x, y, dx);
 				g_pointTriangleNums[i] = 0;
@@ -1666,8 +1672,9 @@ void UpdateSaturations(int idx, Vec2 pos) {
 }
 
 void Absorbing() {
-	g_maps.renewAbsorbing(3, 3, Vec2(1, 0), g_mDrip);
-	g_maps.renewAbsorbing(3, 3, Vec2(1, 1), g_mDrip);
+//	g_maps.renewAbsorbing(3, 3, Vec2(1, 0), g_mDrip);
+//	g_maps.renewAbsorbing(3, 3, Vec2(1, 1), g_mDrip);
+	//g_maps.renewAbsorbing(31, 0, Vec2(0, 1), g_mDrip);
 
 	int activeCount = flexGetActiveCount(g_flex);
 
@@ -1753,12 +1760,12 @@ Vec3 calculateCosTheta(int index) {
 	return Vec3(t0, t1, t2);
 }
 void CalculateThetas() {
-	if (g_thetas.size() == 0) {
-		g_thetas.resize(g_numTriangles);
+	if (g_triangleThetas.size() == 0) {
+		g_triangleThetas.resize(g_numTriangles);
 	}
 
 	for (int i = 0; i < g_numTriangles; i++) {
-		g_thetas[i] = calculateCosTheta(i);
+		g_triangleThetas[i] = calculateCosTheta(i);
 	}
 }
 
@@ -1769,7 +1776,7 @@ void Diffusing() {
 	for (int i = 0; i < g_numTriangles; i++) {
 		float sSum = 0;
 		float si = g_saturations[i];
-		Vec3 thetas = g_thetas[i];
+		Vec3 thetas = g_triangleThetas[i];
 		Vec3 neighbours = g_triangleNeighbours[i];
 		Vec3 deltasin = Vec3(0.0, 0.0, 0.0);
 

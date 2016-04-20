@@ -3846,7 +3846,7 @@ public:
 		g_saturations.resize(0);
 		g_triangleCenters.resize(0);
 		g_triangleNeighbours.resize(0);
-		g_thetas.resize(0);
+		g_triangleThetas.resize(0);
 		g_pointTriangleNums.resize(dimx * dimy);
 		g_pointTriangles.resize(dimx * dimy * 2);
 		g_trianglePoints.resize(0);
@@ -3954,7 +3954,7 @@ public:
 			//g_saturations[1] = g_maxSaturation;
 		}
 		if (1) {
-			g_shaderMode = 1;
+			g_shaderMode = 2;
 			
 		}
 	}
@@ -4009,16 +4009,16 @@ public:
 
 		imguiLabel("Shader Control");
 
-		if (imguiCheck("No Shader", bool(g_shaderMode == -1))) {
-			g_shaderMode = -1;
-		}
-		if (imguiCheck("Normal Shader", bool(g_shaderMode == 0))) {
+		if (imguiCheck("No Shader", bool(g_shaderMode == 0))) {
 			g_shaderMode = 0;
 		}
-		if (imguiCheck("Cloth Shader", bool(g_shaderMode == 1))) {
+		if (imguiCheck("Normal Shader", bool(g_shaderMode == 1))) {
 			g_shaderMode = 1;
 		}
-		if (g_shaderMode == 1) {
+		if (imguiCheck("Cloth Shader", bool(g_shaderMode == 2))) {
+			g_shaderMode = 2;
+		}
+		if (g_shaderMode == 2) {
 			imguiSlider("Fresnel Power Row", &g_cshader_fresnelPowRow, 0.1, 5.0, 0.5);
 			imguiSlider("Fresnel Power Col", &g_cshader_fresnelPowCol, 0.1, 5.0, 0.5);
 			imguiSlider("Kd", &g_cshader_kd, 0.0, 1.0, 0.1);

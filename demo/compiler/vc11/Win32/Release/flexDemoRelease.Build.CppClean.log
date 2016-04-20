@@ -1,19 +1,3 @@
-d:\develop\codes\vs2013\flex080\demo\compiler\vc11\win32\release\vc120.pdb
-d:\develop\codes\vs2013\flex080\demo\compiler\vc11\win32\release\shaders.obj
-d:\develop\codes\vs2013\flex080\demo\compiler\vc11\win32\release\main.obj
-d:\develop\codes\vs2013\flex080\demo\compiler\vc11\win32\release\imguirendergl.obj
-d:\develop\codes\vs2013\flex080\demo\compiler\vc11\win32\release\imgui.obj
-d:\develop\codes\vs2013\flex080\demo\compiler\vc11\win32\release\voxelize.obj
-d:\develop\codes\vs2013\flex080\demo\compiler\vc11\win32\release\tga.obj
-d:\develop\codes\vs2013\flex080\demo\compiler\vc11\win32\release\shader.obj
-d:\develop\codes\vs2013\flex080\demo\compiler\vc11\win32\release\sdf.obj
-d:\develop\codes\vs2013\flex080\demo\compiler\vc11\win32\release\platform.obj
-d:\develop\codes\vs2013\flex080\demo\compiler\vc11\win32\release\pfm.obj
-d:\develop\codes\vs2013\flex080\demo\compiler\vc11\win32\release\perlin.obj
-d:\develop\codes\vs2013\flex080\demo\compiler\vc11\win32\release\mesh.obj
-d:\develop\codes\vs2013\flex080\demo\compiler\vc11\win32\release\maths.obj
-d:\develop\codes\vs2013\flex080\demo\compiler\vc11\win32\release\core.obj
-d:\develop\codes\vs2013\flex080\demo\compiler\vc11\win32\release\aabbtree.obj
 d:\code\visual studio 2013\flex080\demo\compiler\vc11\win32\release\vc120.pdb
 d:\code\visual studio 2013\flex080\demo\compiler\vc11\win32\release\shaders.obj
 d:\code\visual studio 2013\flex080\demo\compiler\vc11\win32\release\main.obj
@@ -30,12 +14,8 @@ d:\code\visual studio 2013\flex080\demo\compiler\vc11\win32\release\mesh.obj
 d:\code\visual studio 2013\flex080\demo\compiler\vc11\win32\release\maths.obj
 d:\code\visual studio 2013\flex080\demo\compiler\vc11\win32\release\core.obj
 d:\code\visual studio 2013\flex080\demo\compiler\vc11\win32\release\aabbtree.obj
-d:\develop\codes\vs2013\flex080\bin\win32\flexdemorelease.lib
-d:\develop\codes\vs2013\flex080\bin\win32\flexdemorelease.exp
 d:\code\visual studio 2013\flex080\bin\win32\flexdemorelease.lib
 d:\code\visual studio 2013\flex080\bin\win32\flexdemorelease.exp
-d:\develop\codes\vs2013\flex080\bin\win32\flexdemorelease.exe
-d:\develop\codes\vs2013\flex080\bin\win32\flexdemorelease.pdb
 d:\code\visual studio 2013\flex080\bin\win32\flexdemorelease.exe
 d:\code\visual studio 2013\flex080\bin\win32\flexdemorelease.pdb
 d:\code\visual studio 2013\flex080\demo\compiler\vc11\..\..\..\bin\win32\flexdemorelease.exe

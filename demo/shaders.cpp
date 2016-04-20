@@ -259,6 +259,7 @@ uniform sampler2D normalMap;
 uniform sampler2D saturationMap;
 
 uniform bool normal;
+uniform bool mark;
 
 uniform int shaderMode;
 
@@ -326,6 +327,53 @@ float checker(float2 uv)
 
 float saturate(float x) {
 	return clamp(x, 0.0, 1.0);
+}
+
+vec3 calSaturation(vec3 c, float saturation) {
+	if (mark) {
+		vec3 newc = c;
+		if (saturation == 0) return newc;
+		switch (int(saturation * 10))
+		{
+		case 0:
+			newc = vec3(0.0, 0.0, 1.0);
+			break;
+		case 1:
+			newc = vec3(0.0, 0.25, 1.0);
+			break;
+		case 2:
+			newc = vec3(0.0, 0.5, 1.0);
+			break;
+		case 3:
+			newc = vec3(0.0, 1.0, 1.0);
+			break;
+		case 4:
+			newc = vec3(0.0, 1.0, 0.5);
+			break;
+		case 5:
+			newc = vec3(0.0, 1.0, 0.0);
+			break;
+		case 6:
+			newc = vec3(0.5, 1.0, 0.0);
+			break;
+		case 7:
+			newc = vec3(1.0, 1.0, 0.0);
+			break;
+		case 8:
+			newc = vec3(1.0, 0.5, 0.0);
+			break;
+		case 9:
+			newc = vec3(1.0, 0.0, 0.0);
+			break;
+		case 10:
+			newc = vec3(1.0, 0.0, 0.0);
+			break;
+		default:
+			break;
+		}
+		return newc;
+	}
+	return c * (1.0 - saturation);
 }
 
 vec3 normalShader(vec3 cr, vec3 cc, float3 normal, float bit) {
@@ -477,14 +525,16 @@ void main()
 		float bit = texture2D(bitMap, gl_TexCoord[5].xy).x;
 		float saturation = texture2D(saturationMap, gl_TexCoord[5].xy).x;
 
-		cr = cr * (1.0 - saturation);
-		cc = cc * (1.0 - saturation);
+		cr = calSaturation(cr, saturation);
+		cc = calSaturation(cc, saturation);
+		//cr = cr * (1.0 - saturation);
+		//cc = cc * (1.0 - saturation);
 
 		if (shaderMode == 1) {
-			color = clothShader(cr, cc, normal, bit);
+			color = normalShader(cr, cc, normal, bit);
 		}
 		else {
-			color = normalShader(cr, cc, normal, bit);
+			color = clothShader(cr, cc, normal, bit);
 		}
 
 	}
@@ -851,7 +901,7 @@ bool loadNormalMap(std::string name) {
 	return result;
 }
 
-void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, std::string clothStyle, int cshader_mode, float cshader_kd, float cshader_a, float cshader_fresnelPowRow, float cshader_fresnelPowCol, Vec3 colorRow, Vec3 colorCol, float expand, bool twosided, bool smooth)
+void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, std::string clothStyle, int cshader_mode, float cshader_kd, float cshader_a, float cshader_fresnelPowRow, float cshader_fresnelPowCol, bool mark, Vec3 colorRow, Vec3 colorCol, float expand, bool twosided, bool smooth)
 {
 	if (!numTris)
 		return;
@@ -919,9 +969,9 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 	glUniform1i(glGetUniformLocation(s_diffuseProgram, "shaderMode"), cshader_mode);
 	switch (cshader_mode)
 	{
-	case 0:
-		break;
 	case 1:
+		break;
+	case 2:
 		glUniform1f(glGetUniformLocation(s_diffuseProgram, "kd"), cshader_kd);
 		glUniform1f(glGetUniformLocation(s_diffuseProgram, "a"), cshader_a);
 		glUniform1f(glGetUniformLocation(s_diffuseProgram, "fresnelPowRow"), cshader_fresnelPowRow);
@@ -934,6 +984,7 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 	glUniform1i(glGetUniformLocation(s_diffuseProgram, "clothColor"), 1);
 	glUniform3fv(glGetUniformLocation(s_diffuseProgram, "clothColorRow"), 1, colorRow);
 	glUniform3fv(glGetUniformLocation(s_diffuseProgram, "clothColorCol"), 1, colorCol);
+	glUniform1i(glGetUniformLocation(s_diffuseProgram, "mark"), mark);
 
 	//glColor3fv(colorRow);
 	//glSecondaryColor3fv(colorCol);
@@ -1045,9 +1096,9 @@ void MyDrawCloth(const Vec4* positions, const Vec4* colors, const Vec4* normals,
 	glUniform1i(glGetUniformLocation(s_diffuseProgram, "shaderMode"), cshader_mode);
 	switch (cshader_mode)
 	{
-	case 0:
-		break;
 	case 1:
+		break;
+	case 2:
 		glUniform1f(glGetUniformLocation(s_diffuseProgram, "kd"), cshader_kd);
 		glUniform1f(glGetUniformLocation(s_diffuseProgram, "a"), cshader_a);
 		glUniform1f(glGetUniformLocation(s_diffuseProgram, "fresnelPowRow"), cshader_fresnelPowRow);
