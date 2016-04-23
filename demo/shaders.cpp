@@ -542,7 +542,7 @@ void main()
 		else {
 			color = clothShader(cr, cc, normal, bit);
 		}
-
+		//color = texture2D(normalMap, gl_TexCoord[5].xy).xyz;
 	}
  
 	
@@ -897,7 +897,7 @@ int LoadGLTextures(const char *name, int idx){
 }
 bool loadNormalMap(std::string name) {
 	std::string path = "../../data/textures/";
-	std::string bname = path + "b" + name + ".bmp";
+	std::string bname = path + "brc" + name + ".bmp";
 	std::string nname = path + "n" + name + ".bmp";
 	std::string sname = path + "s" + name + ".bmp";
 	bool result = LoadGLTextures(bname.c_str(), 1);

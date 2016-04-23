@@ -580,8 +580,8 @@ void Init(int scene, bool centerCamera=true)
 
 
 	//maps
-	//g_clothStyle = "CreprDeChine";
-	g_clothStyle = "LinenPlain";
+	g_clothStyle = "CreprDeChine";
+	//g_clothStyle = "LinenPlain";
 	g_maps = Maps(512, g_clothStyle);
 
 	/*added end*/

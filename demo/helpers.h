@@ -947,8 +947,8 @@ void CreateSpringGrid2(Vec3 lower, int dx, int dy, int dz, float radius, int pha
 				//g_uvs.push_back(Vec3((float)x / (dx - 1) * 4, (float)y / (dy - 1) * 4, 0.0));
 				//g_uvs.push_back(Vec3((float)x / (dx - 1), (float)y / (dy - 1), 0.0));
 
-				//g_uvs.push_back(Vec3((float)x / dx * 16, (float)(dy - 1 - y) / dy * 16, 0.0));
-				//g_uvs.push_back(Vec3((float)x / dx * 8, (float)(dy - 1 - y) / dy * 8, 0.0));
+				//g_uvs.push_back(Vec3((float)x / dx * 16, (float)(dy - y) / dy * 16, 0.0));
+				//g_uvs.push_back(Vec3((float)x / dx * 8, (float)(dy - y) / dy * 8, 0.0));
 				//g_uvs.push_back(Vec3((float)x / dx * 4, (float)(dy - 1 - y) / dy * 4, 0.0));
 				g_uvs.push_back(Vec3((float)x / dx, (float)(dy - y) / dy, 0.0));
 
@@ -1673,10 +1673,26 @@ void UpdateSaturations(int idx, Vec2 pos) {
 	g_maps.renewAbsorbing(idx / g_dy, idx % g_dy, pos, g_mDrip);
 }
 
-void Absorbing() {
-//	g_maps.renewAbsorbing(3, 3, Vec2(1, 0), g_mDrip);
-//	g_maps.renewAbsorbing(3, 3, Vec2(1, 1), g_mDrip);
+void test() {
 	//g_maps.renewAbsorbing(31, 0, Vec2(0, 1), g_mDrip);
+
+	/*test self*/
+	g_maps.renewAbsorbing(31, 1, Vec2(0, 0), g_mDrip);
+	g_maps.renewAbsorbing(31, 0, Vec2(0, 1), g_mDrip);
+
+	/*test side*/
+//	g_maps.renewAbsorbing(31, 15, Vec2(0, 0), g_mDrip);
+//	g_maps.renewAbsorbing(15, 0, Vec2(0, 0), g_mDrip);
+
+	/*test: compare row and col, row frist*/
+	//g_maps.renewAbsorbing(15, 15, Vec2(0, 0), g_mDrip);
+
+	/*test: compare row and col, col frist*/
+	//g_maps.renewAbsorbing(15, 14, Vec2(0, 1), g_mDrip);
+}
+
+void Absorbing() {
+	//test();
 
 	int activeCount = flexGetActiveCount(g_flex);
 
@@ -1762,10 +1778,21 @@ Vec3 calculateCosTheta(int index) {
 	return Vec3(t0, t1, t2);
 }
 float calculateCosTheta(int i, int x) {
-	if (x < 0) return 10.0;
-	if (x >= g_numPoints) return 10.0;
+
+	if (x < 0 || x >= g_numPoints) return 10.0;
+
+	int xi = i / g_dy;
+	int yi = i % g_dy;
+	int xx = x / g_dy;
+	int yx = x % g_dy;
+	if (std::abs(xx - xi) + std::abs(yx - yi) > 1) return 10.0;
 
 	Vec3 dir = g_positions[x] - g_positions[i];
+
+	//if (i == 31 * 32) {
+	//	std::cout << x << " : " << dir[0] << ' ' << dir[1] << ' ' << dir[2]  << std::endl;
+	//}
+
 	return (-dir.y) / (sqrt(sqr(dir.x) + sqr(dir.y) + sqr(dir.z)));
 }
 void CalculateThetas() {
@@ -1785,12 +1812,17 @@ void CalculateThetas() {
 		thetas[2] = calculateCosTheta(i, i - g_dy);	//up
 		thetas[3] = calculateCosTheta(i, i + g_dy);	//down
 
-		if (thetas[0] == 10) thetas[0] = thetas[1];
-		if (thetas[1] == 10) thetas[1] = thetas[0];
-		if (thetas[2] == 10) thetas[2] = thetas[3];
-		if (thetas[3] == 10) thetas[3] = thetas[2];
+		if (thetas[0] == 10) thetas[0] = -thetas[1];
+		if (thetas[1] == 10) thetas[1] = -thetas[0];
+		if (thetas[2] == 10) thetas[2] = -thetas[3];
+		if (thetas[3] == 10) thetas[3] = -thetas[2];
+
+		//if (i == 31 * 32) {
+		//	std::cout << thetas[0] << ' ' << thetas[1] << ' ' << thetas[2] << ' ' << thetas[3] << std::endl;
+		//}
 
 		g_maps.renewPointTheta(i, thetas);
+
 	}
 }
 
