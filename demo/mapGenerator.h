@@ -90,7 +90,24 @@ public:
 			//std::cout << saturationCol[sx * DIMX * 2 + sy] << std::endl;
 		}
 		else {
-			std::cout << "no\n";
+			//std::cout << "no\n";
+		}
+	}
+	/*for test*/
+	void renewAbsorbing(int x, int y, Vec2 pos, float s, int level) {
+		int sx = x * 2 + int(pos.x) - 1;
+		int sy = y * 2 + int(pos.y) - 1;
+		if (sx < 0) sx = 0;
+		if (sx >= rows) sx = rows - 1;
+		if (sy < 0) sy = 0;
+		if (sy >= cols) sy = cols - 1;
+
+		int t = sx * cols + sy;
+		if (level == 0) {
+			saturationRow[t] += s;
+		}
+		else if (level == 1) {
+			saturationCol[t] += s;
 		}
 	}
 	void renewPointTheta(int i, Vec4 thetas) {
@@ -116,7 +133,7 @@ private:
 	int lineWidth = 1;
 	std::string name;
 
-	float kDiffusionSide, kDiffusionLevel;
+	float kDiffusionSide, kDiffusionLevel, kDiffustionLevelGravity;
 
 	void init() {
 		smat = Mat(scale, scale, CV_8UC1);
@@ -124,7 +141,8 @@ private:
 		row.resize(rows, false);
 		col.resize(cols, false);
 		kDiffusionSide = 0.1;
-		kDiffusionLevel = 0.1;
+		kDiffusionLevel = 0.01;
+		kDiffustionLevelGravity = 0.2;
 		pointThetas.resize(DIMX * DIMY);
 	}
 
@@ -206,12 +224,13 @@ private:
 		deltasCol.resize(saturationSize, 0);
 
 		for (int i = 0; i < saturationSize; i++) {
+			int x = i / cols;
+			int y = i % cols;
+			if (!row[x]) continue;
+
 			float sum = 0;
 			float si = saturationRow[i];
 			float ds1 = 0, ds2 = 0, ds3 = 0, ds4 = 0, ds5 = 0;
-
-			int x = i / cols;
-			int y = i % cols;
 
 			Vec4 thetas = pointThetas[(x + 1) / 2 * DIMY + (y + 1) / 2];
 			float theta = 0;
@@ -242,6 +261,7 @@ private:
 			////row level
 			//if (col[y]) {
 			//	ds5 = getMax(0.0, kDiffusionLevel * (kDiffusion * (si - saturationCol[i])));
+			//	sum += ds5;
 			//}
 
 			//with gravity
@@ -263,10 +283,11 @@ private:
 				ds4 = getMax(0.0, kDiffusionSide * (kDiffusion * (si - saturationRow[i + cols]) + kDiffusionGravity * si * thetas[3]));
 				sum += ds4;
 			}
-			////row level
-			//if (col[y]) {
-			//	ds5 = getMax(0.0, kDiffusionLevel * (kDiffusion * (si - saturationCol[i]) + kDiffusionGravity * si * theta));
-			//}
+			//row level
+			if (col[y]) {
+				ds5 = getMax(0.0, kDiffusionLevel * (kDiffusion * (si - saturationCol[i]) + kDiffustionLevelGravity * si * theta));
+				sum += ds5;
+			}
 
 			float normFac = 1.0;
 			if (sum > si) {
@@ -297,12 +318,13 @@ private:
 
 
 		for (int i = 0; i < saturationSize; i++) {
+			int x = i / cols;
+			int y = i % cols;
+			if (!col[y]) continue;
+
 			float sum = 0;
 			float si = saturationCol[i];
 			float ds1 = 0, ds2 = 0, ds3 = 0, ds4 = 0, ds5 = 0;
-
-			int x = i / cols;
-			int y = i % cols;
 
 			Vec4 thetas = pointThetas[(x + 1) / 2 * DIMY + (y + 1) / 2];		
 			//if (x == 61 && y == 0) {
@@ -359,11 +381,11 @@ private:
 				ds4 = getMax(0.0, kDiffusionSide * (kDiffusion * (si - saturationCol[i + 1]) + kDiffusionGravity * si * thetas[1]));
 				sum += ds4;
 			}
-			////col level
-			//if (row[x]) {
-			//	ds5 = getMax(0.0, kDiffusionLevel * (kDiffusion * (si - saturationRow[i]) + kDiffusionGravity * si * theta));
-			//	sum += ds5;
-			//}
+			//col level
+			if (row[x]) {
+				ds5 = getMax(0.0, kDiffusionLevel * (kDiffusion * (si - saturationRow[i]) + kDiffustionLevelGravity * si * theta));
+				sum += ds5;
+			}
 
 			float normFac = 1.0;
 

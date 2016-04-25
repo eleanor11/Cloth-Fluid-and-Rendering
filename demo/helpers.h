@@ -1677,8 +1677,8 @@ void test() {
 	//g_maps.renewAbsorbing(31, 0, Vec2(0, 1), g_mDrip);
 
 	/*test self*/
-	g_maps.renewAbsorbing(31, 1, Vec2(0, 0), g_mDrip);
-	g_maps.renewAbsorbing(31, 0, Vec2(0, 1), g_mDrip);
+	//g_maps.renewAbsorbing(31, 1, Vec2(0, 0), g_mDrip);
+	//g_maps.renewAbsorbing(31, 0, Vec2(0, 1), g_mDrip);
 
 	/*test side*/
 //	g_maps.renewAbsorbing(31, 15, Vec2(0, 0), g_mDrip);
@@ -1689,10 +1689,18 @@ void test() {
 
 	/*test: compare row and col, col frist*/
 	//g_maps.renewAbsorbing(15, 14, Vec2(0, 1), g_mDrip);
+
+	/*test level*/
+	//g_maps.renewAbsorbing(15, 15, Vec2(0, 1), g_mDrip, 0);
+
+
+	/*test Linen*/
+	g_maps.renewAbsorbing(15, 15, Vec2(0, 1), g_mDrip);
+
 }
 
 void Absorbing() {
-	//test();
+	test();
 
 	int activeCount = flexGetActiveCount(g_flex);
 
