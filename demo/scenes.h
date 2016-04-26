@@ -4019,6 +4019,23 @@ public:
 			g_shaderMode = 2;
 		}
 		if (g_shaderMode == 2) {
+			if (imguiCheck("LinenPlain", bool(g_clothStyle == 0))) {
+				g_clothStyle = 0;
+				g_maps.setName(g_clothStyles[g_clothStyle]);
+			}
+			if (imguiCheck("CreprDeChine", bool(g_clothStyle == 1))) {
+				g_clothStyle = 1;
+				g_maps.setName(g_clothStyles[g_clothStyle]);
+			}
+			if (imguiCheck("PolyesterStainCharmeuseFront", bool(g_clothStyle == 2))) {
+				g_clothStyle = 2;
+				g_maps.setName(g_clothStyles[g_clothStyle]);
+			}
+			if (imguiCheck("PolyesterStainCharmeuseBack", bool(g_clothStyle == 3))) {
+				g_clothStyle = 3;
+				g_maps.setName(g_clothStyles[g_clothStyle]);
+			}
+
 			imguiSlider("Fresnel Power Row", &g_cshader_fresnelPowRow, 0.1, 5.0, 0.5);
 			imguiSlider("Fresnel Power Col", &g_cshader_fresnelPowCol, 0.1, 5.0, 0.5);
 			imguiSlider("Kd", &g_cshader_kd, 0.0, 1.0, 0.1);

@@ -262,7 +262,8 @@ Vec3 g_clothColorCol;
 
 
 //maps
-string g_clothStyle;
+vector<string> g_clothStyles;
+int g_clothStyle;
 Maps g_maps;
 
 /*added end*/
@@ -581,8 +582,12 @@ void Init(int scene, bool centerCamera=true)
 
 	//maps
 	//g_clothStyle = "CreprDeChine";
-	g_clothStyle = "LinenPlain";
-	g_maps = Maps(512, g_clothStyle);
+	g_clothStyle = 0;
+	g_clothStyles.push_back("LinenPlain");
+	g_clothStyles.push_back("CreprDeChine");
+	g_clothStyles.push_back("PolyesterStainCharmeuseFront");
+	g_clothStyles.push_back("PolyesterStainCharmeuseBack");
+	g_maps = Maps(512, g_clothStyles[g_clothStyle]);
 
 	/*added end*/
 
@@ -1280,10 +1285,9 @@ void GLUTUpdate()
 		}
 		else {
 			//CalculateColors();
-			//MyDrawCloth(&g_positions[0], &g_colors[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_clothStyle, g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_expandCloth);
+			//MyDrawCloth(&g_positions[0], &g_colors[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_clothStyles[g_clothStyle], g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_expandCloth);
 			
-			//g_maps.writeToFile();
-			MyDrawCloth(&g_positions[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_clothStyle, g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_markColor, g_clothColorRow, g_clothColorCol, g_expandCloth);
+			MyDrawCloth(&g_positions[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_clothStyles[g_clothStyle], g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_markColor, g_clothColorRow, g_clothColorCol, g_expandCloth);
 			BindSolidShader(g_lightPos, g_lightTarget, lightTransform, g_shadowTex, 0.0f, Vec4(g_clearColor, g_fogDistance));
 
 			}

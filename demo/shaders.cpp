@@ -333,10 +333,12 @@ vec3 calSaturation(vec3 c, float saturation) {
 	if (mark) {
 		vec3 newc = c;
 		if (saturation == 0) return newc;
+		
 		switch (int(saturation * 10))
 		{
 		case 0:
-			newc = vec3(0.0, 0.0, 1.0);
+			float tmp = float(int(saturation * 100) % 10 + 1) / 10.0;
+			newc = vec3(0.0, 0.0, 1.0) * tmp;
 			break;
 		case 1:
 			newc = vec3(0.0, 0.25, 1.0);
@@ -407,7 +409,7 @@ vec3 clothShader(vec3 cr, vec3 cc, float3 normal, float bit) {
 	float3 t = float3(0.0, 0.0, 0.0);
 	float fresnelPow = 0.0;
 
-	float tmp = 0.1;
+	float tmp = 0.2;
 	//if (bit == 0) {
 	if (bit < 0.5 - tmp) {
 		t = float3(1.0, 0.0, 0.0);
@@ -525,7 +527,6 @@ void main()
 	}
 
 	
-
 	if (normal) {
 		float3 normal = normalize(texture2D(normalMap, gl_TexCoord[5].xy).xyz * 2 - 1);
 		float bit = texture2D(bitMap, gl_TexCoord[5].xy).x;
@@ -543,6 +544,7 @@ void main()
 			color = clothShader(cr, cc, normal, bit);
 		}
 		//color = texture2D(normalMap, gl_TexCoord[5].xy).xyz;
+
 	}
  
 	
@@ -563,7 +565,7 @@ void main()
 
 	vec3 fog = lerp(vec3(fogColor), diffuse + ambient, exp(gl_TexCoord[7].z*fogColor.w));
 
-	gl_FragColor = vec4(pow(fog, vec3(1.0/2.2)), 1.0);				
+	gl_FragColor = vec4(pow(fog, vec3(1.0/2.2)), 1.0);	
 
 });
 

@@ -53,6 +53,9 @@ public:
 	}
 	void setName(std::string str) {
 		name = str;
+
+		init();
+		readBmap();
 	}
 	std::string getName() {
 		return name;
@@ -159,7 +162,7 @@ private:
 			}
 		}
 
-		imwrite("../../data/textures/s" + name + ".bmp", smat);
+		//imwrite("../../data/textures/s" + name + ".bmp", smat);
 	}
 
 	void renewSaturationMap() {
@@ -174,12 +177,13 @@ private:
 					t = saturationCol[idx];
 				}
 				idx++;
-				t = t / MAXSATURATION * 255;
-				if (t > 255) t = 255;
+				float tmp = t / MAXSATURATION * 255;
+				if (tmp > 255) tmp = 255;
+				if (t > 0 && (int)tmp == 0) tmp = 1;
 
 				for (int ii = 0; ii < 8; ii++) {
 					for (int jj = 0; jj < 8; jj++) {
-						smat.at<uchar>(i * 8 + ii, j * 8 + jj) = t;
+						smat.at<uchar>(i * 8 + ii, j * 8 + jj) = tmp;
 					}
 				}
 			}
