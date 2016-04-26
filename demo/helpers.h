@@ -1700,7 +1700,7 @@ void test() {
 }
 
 void Absorbing() {
-	test();
+	//test();
 
 	int activeCount = flexGetActiveCount(g_flex);
 
