@@ -245,6 +245,8 @@ bool g_absorb;
 bool g_diffuse;
 bool g_drip;
 bool g_markColor;
+bool g_texture;
+bool g_noise;
 
 bool g_camInit = false;
 
@@ -265,6 +267,8 @@ Vec3 g_clothColorCol;
 vector<string> g_clothStyles;
 int g_clothStyle;
 Maps g_maps;
+
+Vec3 g_lightDirection;
 
 /*added end*/
 
@@ -588,6 +592,9 @@ void Init(int scene, bool centerCamera=true)
 	g_clothStyles.push_back("PolyesterStainCharmeuseFront");
 	g_clothStyles.push_back("PolyesterStainCharmeuseBack");
 	g_maps = Maps(512, g_clothStyles[g_clothStyle]);
+
+
+	g_lightDirection = Vec3(5.0f, 15.0f, 7.5f);
 
 	/*added end*/
 
@@ -1127,7 +1134,9 @@ void GLUTUpdate()
 	Vec3 sceneExtents = g_sceneUpper - g_sceneLower;
 	Vec3 sceneCenter = 0.5f*(g_sceneUpper + g_sceneLower);
 
-	g_lightDir = Normalize(Vec3(5.0f, 15.0f, 7.5f));
+	g_lightDir = Normalize(g_lightDirection);
+	//g_lightDir = Normalize(Vec3(5.0f, 15.0f, 7.5f));
+	//g_lightDir = Normalize(Vec3(0.0f, 15.0f, 0.0f));
 	g_lightPos = sceneCenter + g_lightDir*Length(sceneExtents)*g_lightDistance;
 	g_lightTarget = sceneCenter;
 
@@ -1287,7 +1296,7 @@ void GLUTUpdate()
 			//CalculateColors();
 			//MyDrawCloth(&g_positions[0], &g_colors[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_clothStyles[g_clothStyle], g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_expandCloth);
 			
-			MyDrawCloth(&g_positions[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_clothStyles[g_clothStyle], g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_markColor, g_clothColorRow, g_clothColorCol, g_expandCloth);
+			MyDrawCloth(&g_positions[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_clothStyles[g_clothStyle], g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_markColor, g_texture, g_noise, g_clothColorRow, g_clothColorCol, g_expandCloth);
 			BindSolidShader(g_lightPos, g_lightTarget, lightTransform, g_shadowTex, 0.0f, Vec4(g_clearColor, g_fogDistance));
 
 			}
@@ -1991,11 +2000,6 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 			g_camVel.z = kSpeed;
 			break;
 		}
-		case 'W':
-		{
-			g_camVel.z = kSpeed*4.0f;
-			break;
-		}
 		case 's':
 		{
 			g_camVel.z = -kSpeed;
@@ -2022,6 +2026,30 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 			g_camVel.y = -kSpeed;
 			break;
 		}
+
+		/*add by eleanor*/
+		case 'W':
+		{
+			g_lightDirection.z += kSpeed * 5;
+			break;
+		}
+		case 'S':
+		{
+			g_lightDirection.z -= kSpeed * 5;
+			break;
+		}
+		case 'A':
+		{
+			g_lightDirection.x -= kSpeed * 5;
+			break;
+		}
+		case 'D':
+		{
+			g_lightDirection.x += kSpeed * 5;
+			break;
+		}
+
+		/*add end*/
 
 		case 'u':
 		{
@@ -2335,7 +2363,8 @@ void GLUTMouseFunc(int b, int state, int x, int y)
 
 				if (g_mouseParticle != -1)
 				{
-					printf("picked: %d, mass: %f v: %f %f %f\n", g_mouseParticle, g_positions[g_mouseParticle].w, g_velocities[g_mouseParticle].x, g_velocities[g_mouseParticle].y, g_velocities[g_mouseParticle].z);
+					//printf("picked: %d, mass: %f v: %f %f %f\n", g_mouseParticle, g_positions[g_mouseParticle].w, g_velocities[g_mouseParticle].x, g_velocities[g_mouseParticle].y, g_velocities[g_mouseParticle].z);
+					printf("picked: %d, mass: %f v: %f %f %f p: %f %f %f\n", g_mouseParticle, g_positions[g_mouseParticle].w, g_velocities[g_mouseParticle].x, g_velocities[g_mouseParticle].y, g_velocities[g_mouseParticle].z, g_positions[g_mouseParticle].x, g_positions[g_mouseParticle].y, g_positions[g_mouseParticle].z);
 
 					g_mousePos = origin + dir*g_mouseT;
 					g_positions[g_mouseParticle].w *= 0.001f;		// increase picked particle's mass to force it towards the point

@@ -257,9 +257,11 @@ uniform bool texture;
 uniform sampler2D bitMap;
 uniform sampler2D normalMap;
 uniform sampler2D saturationMap;
+uniform sampler2D noiseMap;
 
-uniform bool normal;
-uniform bool mark;
+uniform bool normalFlag;
+uniform bool markFlag;
+uniform bool noiseFlag;
 
 uniform int shaderMode;
 
@@ -330,7 +332,7 @@ float saturate(float x) {
 }
 
 vec3 calSaturation(vec3 c, float saturation) {
-	if (mark) {
+	if (markFlag) {
 		vec3 newc = c;
 		if (saturation == 0) return newc;
 		
@@ -527,10 +529,16 @@ void main()
 	}
 
 	
-	if (normal) {
+	if (normalFlag) {
 		float3 normal = normalize(texture2D(normalMap, gl_TexCoord[5].xy).xyz * 2 - 1);
 		float bit = texture2D(bitMap, gl_TexCoord[5].xy).x;
 		float saturation = texture2D(saturationMap, gl_TexCoord[5].xy).x;
+
+		if (noiseFlag) {
+			//float3 noise = normalize(texture2D(noiseMap, gl_TexCoord[5].xy).xyz * 2 - 1);
+			float noise = texture2D(noiseMap, gl_TexCoord[5].xy * 4).x;
+			normal = normal.xyz * noise;
+		}
 
 		cr = calSaturation(cr, saturation);
 		cc = calSaturation(cc, saturation);
@@ -845,7 +853,7 @@ void DrawClothColor(const Vec4* positions, const Vec4* colors, const Vec4* norma
 }
 
 
-const int nTex = 4;
+const int nTex = 5;
 GLuint myTex[nTex];
 
 AUX_RGBImageRec *LoadBMP(const char *Filename){
@@ -909,7 +917,7 @@ bool loadNormalMap(std::string name) {
 	return result;
 }
 
-void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, std::string clothStyle, int cshader_mode, float cshader_kd, float cshader_a, float cshader_fresnelPowRow, float cshader_fresnelPowCol, bool mark, Vec3 colorRow, Vec3 colorCol, float expand, bool twosided, bool smooth)
+void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, std::string clothStyle, int cshader_mode, float cshader_kd, float cshader_a, float cshader_fresnelPowRow, float cshader_fresnelPowCol, bool mark, bool texture, bool noise, Vec3 colorRow, Vec3 colorCol, float expand, bool twosided, bool smooth)
 {
 	if (!numTris)
 		return;
@@ -929,8 +937,9 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 		glUniform1f(uExpand, expand);
 	}
 
-	bool texFlag = LoadGLTextures("../../data/textures/mycloth1.bmp", 0);
+	bool texFlag = LoadGLTextures("../../data/textures/mycloth.bmp", 0);
 	bool normalFlag = loadNormalMap(clothStyle);
+	bool noiseFlag = LoadGLTextures("../../data/textures/noise.bmp", 4);
 	//bool normalFlag = loadNormalMap("LinenPlain");
 	//bool normalFlag = loadNormalMap("CreprDeChine");
 	//bool normalFlag = loadNormalMap("PolyesterStainCharmeuseFront");
@@ -939,7 +948,7 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 	if (texFlag) {
 
 		glUseProgram(s_diffuseProgram);
-		glUniform1i(glGetUniformLocation(s_diffuseProgram, "texture"), 0);
+		glUniform1i(glGetUniformLocation(s_diffuseProgram, "texture"), texture);
 
 		GLint uTex = glGetUniformLocation(s_diffuseProgram, "tex");
 		glUniform1i(uTex, 1);
@@ -951,7 +960,7 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 
 	if (normalFlag) {
 		glUseProgram(s_diffuseProgram);
-		glUniform1i(glGetUniformLocation(s_diffuseProgram, "normal"), 1);
+		glUniform1i(glGetUniformLocation(s_diffuseProgram, "normalFlag"), 1);
 
 		GLint uTexB = glGetUniformLocation(s_diffuseProgram, "bitMap");
 		glUniform1i(uTexB, 2);
@@ -974,6 +983,20 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 
 	}
 
+	if (noiseFlag) {
+
+		glUseProgram(s_diffuseProgram);
+		glUniform1i(glGetUniformLocation(s_diffuseProgram, "noiseFlag"), noise);
+
+		GLint uTex = glGetUniformLocation(s_diffuseProgram, "noiseMap");
+		glUniform1i(uTex, 6);
+
+		glActiveTexture(GL_TEXTURE6);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, myTex[4]);
+
+	}
+
 	glUniform1i(glGetUniformLocation(s_diffuseProgram, "shaderMode"), cshader_mode);
 	switch (cshader_mode)
 	{
@@ -992,7 +1015,7 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 	glUniform1i(glGetUniformLocation(s_diffuseProgram, "clothColor"), 1);
 	glUniform3fv(glGetUniformLocation(s_diffuseProgram, "clothColorRow"), 1, colorRow);
 	glUniform3fv(glGetUniformLocation(s_diffuseProgram, "clothColorCol"), 1, colorCol);
-	glUniform1i(glGetUniformLocation(s_diffuseProgram, "mark"), mark);
+	glUniform1i(glGetUniformLocation(s_diffuseProgram, "markFlag"), mark);
 
 	//glColor3fv(colorRow);
 	//glSecondaryColor3fv(colorCol);
@@ -1039,7 +1062,14 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 		glActiveTexture(GL_TEXTURE5);
 		glDisable(GL_TEXTURE_2D);
 
-		glUniform1i(glGetUniformLocation(s_diffuseProgram, "normal"), 0);
+		glUniform1i(glGetUniformLocation(s_diffuseProgram, "normalFlag"), 0);
+	}
+	if (noiseFlag) {
+		glActiveTexture(GL_TEXTURE6);
+		glDisable(GL_TEXTURE_2D);
+
+		glUniform1i(glGetUniformLocation(s_diffuseProgram, "noiseFlag"), 0);
+
 	}
 }
 

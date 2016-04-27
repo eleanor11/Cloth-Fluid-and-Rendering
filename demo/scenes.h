@@ -3993,12 +3993,18 @@ public:
 		imguiSeparatorLine();
 
 		imguiLabel("Cloth Color");
-
+	
+		if (imguiCheck("Texture", bool(g_texture != 0))) {
+			g_texture = !g_texture;
+		}
+		if (imguiCheck("Noise", bool(g_noise != 0))) {
+			g_noise = !g_noise;
+		}
 		if (imguiCheck("Mark", bool(g_markColor != 0))) {
 			g_markColor = !g_markColor;
 		}
 
-		if (!g_markColor) {
+		if (!g_markColor && !g_texture) {
 			imguiSlider("R", &g_clothColor.x, 0.0, 1.0, 0.1);
 			imguiSlider("G", &g_clothColor.y, 0.0, 1.0, 0.1);
 			imguiSlider("B", &g_clothColor.z, 0.0, 1.0, 0.1);
