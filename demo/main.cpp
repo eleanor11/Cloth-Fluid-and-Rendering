@@ -586,7 +586,7 @@ void Init(int scene, bool centerCamera=true)
 
 	//maps
 	//g_clothStyle = "CreprDeChine";
-	g_clothStyle = 0;
+	g_clothStyle = 1;
 	g_clothStyles.push_back("LinenPlain");
 	g_clothStyles.push_back("CreprDeChine");
 	g_clothStyles.push_back("PolyesterStainCharmeuseFront");

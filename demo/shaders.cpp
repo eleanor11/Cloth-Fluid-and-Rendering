@@ -377,7 +377,7 @@ vec3 calSaturation(vec3 c, float saturation) {
 		}
 		return newc;
 	}
-	return c * (1.0 - saturation);
+	return c * (1.0 - saturation) * (1.0 - saturation);
 }
 
 vec3 normalShader(vec3 cr, vec3 cc, float3 normal, float bit) {
