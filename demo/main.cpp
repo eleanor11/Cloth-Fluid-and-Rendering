@@ -834,6 +834,13 @@ void Init(int scene, bool centerCamera=true)
 void Reset()
 {
 	Init(g_scene, false);
+	//cudaDeviceReset();
+
+	cudaSetDevice(g_cudaDevice);
+
+	cudaDeviceProp prop;
+	cudaCheck(cudaGetDeviceProperties(&prop, g_cudaDevice));
+	memcpy(g_device, prop.name, 256);
 }
 
 void GLUTUpdate()
