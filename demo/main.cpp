@@ -2056,6 +2056,23 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 			break;
 		}
 
+		case 'T': {
+			g_emitters[1].mPos.z += kSpeed / 5;
+			break;
+		}
+		case 'G': {
+			g_emitters[1].mPos.z -= kSpeed / 5;
+			break;
+		}
+		case 'F': {
+			g_emitters[1].mPos.x -= kSpeed / 5;
+			break;
+		}
+		case 'H': {
+			g_emitters[1].mPos.x += kSpeed / 5;
+			break;
+		}
+
 		/*add end*/
 
 		case 'u':

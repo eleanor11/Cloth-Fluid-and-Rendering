@@ -1632,8 +1632,6 @@ bool Collide(int i, int j, Vec2 &pos) {
 		if (posX.z < posY.z) pos.y = 0;
 		else pos.y = 1;
 
-		//cout << pos.x << ' ' << pos.y << endl;
-
 		return true;
 	}
 
@@ -1695,7 +1693,12 @@ void test() {
 
 
 	/*test Linen*/
-	g_maps.renewAbsorbing(15, 15, Vec2(0, 1), g_mDrip);
+	//g_maps.renewAbsorbing(15, 15, Vec2(0, 1), g_mDrip);
+
+	UpdateSaturations(0, Vec2(0, 0));
+	UpdateSaturations(1, Vec2(0, 1));
+	UpdateSaturations(31, Vec2(1, 1));
+	UpdateSaturations(100, Vec2(1, 0));
 
 }
 

@@ -547,8 +547,15 @@ void main()
 		cc = calSaturation(cc, saturation);
 		//cr = cr * (1.0 - saturation);
 		//cc = cc * (1.0 - saturation);
-
-		if (shaderMode == 1) {
+		if (markFlag) {
+			if (bit == 0) {
+				color = cr;
+			}
+			else if (bit == 1) {
+				color = cc;
+			}
+		}
+		else if (shaderMode == 1) {
 			color = normalShader(cr, cc, normal, bit);
 		}
 		else {
