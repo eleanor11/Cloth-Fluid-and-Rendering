@@ -1695,15 +1695,21 @@ void test() {
 	/*test Linen*/
 	//g_maps.renewAbsorbing(15, 15, Vec2(0, 1), g_mDrip);
 
-	UpdateSaturations(0, Vec2(0, 0));
-	UpdateSaturations(1, Vec2(0, 1));
-	UpdateSaturations(31, Vec2(1, 1));
-	UpdateSaturations(100, Vec2(1, 0));
+	//UpdateSaturations(0, Vec2(0, 0));
+	//UpdateSaturations(1, Vec2(0, 1));
+	//UpdateSaturations(31, Vec2(1, 1));
+	//UpdateSaturations(100, Vec2(1, 0));
+
+	for (int i = 0; i < 32; i++) {
+		for (int j = 0; j < 32; j++) {
+			g_maps.renewAbsorbing(i, j, Vec2(0, 0), g_mDrip);
+		}
+	}
 
 }
 
 void Absorbing() {
-	//test();
+	test();
 
 	int activeCount = flexGetActiveCount(g_flex);
 

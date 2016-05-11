@@ -36,6 +36,7 @@ public:
 
 		init();
 		readBmap();
+		readMSmap();
 	}
 
 	void setScale(int s) {
@@ -56,6 +57,7 @@ public:
 
 		init();
 		readBmap();
+		readMSmap();
 	}
 	std::string getName() {
 		return name;
@@ -83,13 +85,21 @@ public:
 		//std::cout << mx << ' ' << my << std::endl;
 		//std::cout << bmat.channels() << std::endl;
 		//std::cout << t << std::endl;
+		float max = MAXSATURATION;
+		if (maxMap && msMap[t] < MAXSATURATION) {
+			//max = msMap[t];
+			max = 1.0;
+		}
+
 		if (bitMap[t] == 0) {
 			saturationRow[t] += s;
+			if (saturationRow[t] > max) saturationRow[t] = max;
 			//std::cout << s << std::endl;
 			//std::cout << saturationRow[sx * DIMX * 2 + sy] << std::endl;
 		}
 		else if (bitMap[t] == 255) {
 			saturationCol[t] += s;
+			if (saturationCol[t] > max) saturationCol[t] = max;
 			//std::cout << saturationCol[sx * DIMX * 2 + sy] << std::endl;
 		}
 		else {
@@ -125,6 +135,7 @@ private:
 
 	std::vector<float> saturationRow, saturationCol;
 	std::vector<int> bitMap;
+	std::vector<float> msMap;
 
 	std::vector<bool> row, col;
 
@@ -136,6 +147,8 @@ private:
 	int lineWidth = 1;
 	std::string name;
 
+	bool maxMap;
+
 	float kDiffusionSide, kDiffusionLevel, kDiffustionLevelGravity;
 
 	void init() {
@@ -144,9 +157,11 @@ private:
 		row.resize(rows, false);
 		col.resize(cols, false);
 		kDiffusionSide = 0.1;
-		kDiffusionLevel = 0.01;
+		kDiffusionLevel = 0.05;
 		kDiffustionLevelGravity = 0.2;
 		pointThetas.resize(DIMX * DIMY);
+
+		maxMap = false;
 	}
 
 	void initiateSaturation() {
@@ -201,6 +216,22 @@ private:
 				if (bgr[0] == 255) row[i] = true;
 				if (bgr[1] == 255) col[j] = true;
 				bitMap[idx++] = (int)(bgr[2]);
+			}
+		}
+	}
+
+	void readMSmap() {
+		Mat msmat = imread("../../data/textures/ms" + name + ".bmp");
+
+		if (msmat.rows == 0) return;
+		maxMap = true;
+
+		msMap.resize(saturationSize, 0);
+		int idx = 0;
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < cols; j++) {
+				cv::Vec3b &bgr = msmat.at<cv::Vec3b>(i * 8 + 4, j * 8 + 4);
+				msMap[idx++] = (float)bgr[0] / 255 * MAXSATURATION;
 			}
 		}
 	}

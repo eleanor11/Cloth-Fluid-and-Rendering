@@ -1699,7 +1699,8 @@ void GLUTUpdate()
 
 		x -= 180;
 
-		int uiOffset = 250;
+		//int uiOffset = 250;
+		int uiOffset = 150;
 		int uiBorder = 20;
 		int uiWidth = 250;
 		int uiHeight = g_screenHeight-uiOffset-uiBorder*3;
@@ -2057,11 +2058,11 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 		}
 
 		case 'T': {
-			g_emitters[1].mPos.z += kSpeed / 5;
+			g_emitters[1].mPos.z -= kSpeed / 5;
 			break;
 		}
 		case 'G': {
-			g_emitters[1].mPos.z -= kSpeed / 5;
+			g_emitters[1].mPos.z += kSpeed / 5;
 			break;
 		}
 		case 'F': {

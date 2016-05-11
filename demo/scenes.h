@@ -3928,10 +3928,12 @@ public:
 		g_emitters[0].mEnabled = false;
 
 		Emitter e;
-		e.mDir = Normalize(Vec3(1.0f, 0.0f, 0.0f));
+		//e.mDir = Normalize(Vec3(1.0f, 0.0f, 0.0f));
+		e.mDir = Normalize(Vec3(0.0f, -1.0f, 0.0f));
 		e.mEnabled = true;
 		//e.mPos = Vec3(-0.25f, 1.75f, 0.5f);
-		e.mPos = Vec3(0.0f, 1.5f, 0.5f);
+		e.mPos = Vec3(0.0f, 1.25f, 0.5f);
+		//e.mRight = Cross(e.mDir, Vec3(0.0f, 0.0f, 1.0f));
 		e.mRight = Cross(e.mDir, Vec3(0.0f, 0.0f, 1.0f));
 		e.mSpeed = (g_params.mFluidRestDistance / (g_dt * 2.0f));
 		e.mWidth = g_emitterWidth;
