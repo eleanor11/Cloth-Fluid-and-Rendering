@@ -340,34 +340,34 @@ vec3 calSaturation(vec3 c, float saturation) {
 		{
 		case 0:
 			float tmp = float(int(saturation * 100) % 10 + 1) / 10.0;
-			newc = vec3(0.0, 0.0, 1.0) * tmp;
+			newc = vec3(0.0, tmp, 1.0);
 			break;
 		case 1:
-			newc = vec3(0.0, 0.25, 1.0);
-			break;
-		case 2:
-			newc = vec3(0.0, 0.5, 1.0);
-			break;
-		case 3:
 			newc = vec3(0.0, 1.0, 1.0);
 			break;
-		case 4:
-			newc = vec3(0.0, 1.0, 0.5);
+		case 2:
+			newc = vec3(0.0, 1.0, 0.66);
 			break;
-		case 5:
+		case 3:
+			newc = vec3(0.0, 1.0, 0.33);
+			break;
+		case 4:
 			newc = vec3(0.0, 1.0, 0.0);
 			break;
+		case 5:
+			newc = vec3(0.33, 1.0, 0.0);
+			break;
 		case 6:
-			newc = vec3(0.5, 1.0, 0.0);
+			newc = vec3(0.66, 1.0, 0.0);
 			break;
 		case 7:
 			newc = vec3(1.0, 1.0, 0.0);
 			break;
 		case 8:
-			newc = vec3(1.0, 0.5, 0.0);
+			newc = vec3(1.0, 0.66, 0.0);
 			break;
 		case 9:
-			newc = vec3(1.0, 0.0, 0.0);
+			newc = vec3(1.0, 0.33, 0.0);
 			break;
 		case 10:
 			newc = vec3(1.0, 0.0, 0.0);

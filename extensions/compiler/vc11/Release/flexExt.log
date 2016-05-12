@@ -1,4 +1,4 @@
-﻿生成启动时间为 2016/5/12 14:21:16。
+﻿生成启动时间为 2016/5/12 14:42:54。
      1>项目“D:\code\visual studio 2013\flex080\extensions\compiler\vc11\flexExt.vcxproj”在节点 2 上(Build 个目标)。
      1>C:\Program Files (x86)\MSBuild\12.0\bin\Microsoft.Common.CurrentVersion.targets(1492,5): warning : The referenced project '..\..\..\src\compiler\cuda\vc11\flex.vcxproj' does not exist.
      1>CustomBuild:
@@ -95,4 +95,4 @@
 
 生成成功。
 
-已用时间 00:00:06.14
+已用时间 00:00:07.02

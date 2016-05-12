@@ -1,24 +1,12 @@
-﻿生成启动时间为 2016/5/12 14:21:22。
+﻿生成启动时间为 2016/5/12 14:43:01。
      1>项目“D:\code\visual studio 2013\flex080\demo\compiler\vc11\flexdemo.vcxproj”在节点 2 上(Build 个目标)。
      1>ClCompile:
-         D:\tool\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I..\..\.. /I..\..\..\include /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0/include" /Zi /nologo /W3 /WX- /Ox /Oi /Oy- /GL /D _HAS_EXCEPTIONS=0 /D _CRT_SECURE_NO_WARNINGS /D WIN32 /D NDEBUG /D _CONSOLE /D _MBCS /Gm- /EHsc /MT /GS- /Gy /arch:SSE2 /fp:fast /Zc:wchar_t /Zc:forScope /Fo"Win32\Release\\" /Fd"Win32\Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\main.cpp
-         main.cpp
-     1>D:\tool\opencv3.0\build\include\opencv2/core/mat.hpp(1965): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-     1>D:\tool\opencv3.0\build\include\opencv2/core/persistence.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-     1>D:\tool\opencv3.0\build\include\opencv2/core/utility.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-     1>d:\code\visual studio 2013\flex080\demo\mapGenerator.h(180): warning C4244: “=”: 从“float”转换到“uchar”，可能丢失数据
-     1>d:\code\visual studio 2013\flex080\demo\mapGenerator.h(217): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
-     1>d:\code\visual studio 2013\flex080\demo\mapGenerator.h(218): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
-     1>d:\code\visual studio 2013\flex080\demo\helpers.h(881): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
-     1>d:\code\visual studio 2013\flex080\demo\helpers.h(884): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
-     1>d:\code\visual studio 2013\flex080\demo\helpers.h(887): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
-     1>d:\code\visual studio 2013\flex080\demo\helpers.h(890): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
-     1>d:\code\visual studio 2013\flex080\demo\helpers.h(993): warning C4244: “参数”: 从“int”转换到“float”，可能丢失数据
-     1>d:\code\visual studio 2013\flex080\demo\helpers.h(994): warning C4244: “参数”: 从“int”转换到“float”，可能丢失数据
-     1>d:\code\visual studio 2013\flex080\demo\helpers.h(1429): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
-     1>d:\code\visual studio 2013\flex080\demo\helpers.h(1433): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
-     1>d:\code\visual studio 2013\flex080\demo\helpers.h(1437): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
-     1>d:\code\visual studio 2013\flex080\demo\helpers.h(1942): warning C4244: “参数”: 从“int”转换到“float”，可能丢失数据
+         D:\tool\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I..\..\.. /I..\..\..\include /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0/include" /Zi /nologo /W3 /WX- /Ox /Oi /Oy- /GL /D _HAS_EXCEPTIONS=0 /D _CRT_SECURE_NO_WARNINGS /D WIN32 /D NDEBUG /D _CONSOLE /D _MBCS /Gm- /EHsc /MT /GS- /Gy /arch:SSE2 /fp:fast /Zc:wchar_t /Zc:forScope /Fo"Win32\Release\\" /Fd"Win32\Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\shaders.cpp
+         shaders.cpp
+     1>..\..\shaders.cpp(923): warning C4800: “int”: 将值强制为布尔值“true”或“false”(性能警告)
+     1>..\..\shaders.cpp(950): warning C4800: “int”: 将值强制为布尔值“true”或“false”(性能警告)
+     1>..\..\shaders.cpp(952): warning C4800: “int”: 将值强制为布尔值“true”或“false”(性能警告)
+     1>..\..\shaders.cpp(1105): warning C4800: “int”: 将值强制为布尔值“true”或“false”(性能警告)
        Link:
          D:\tool\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"..\..\..\bin\Win32\flexDemoRelease.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:..\..\..\lib\Win32 /LIBPATH:..\..\..\external\freeglut\lib /LIBPATH:..\..\..\external\glew\lib\win32 /LIBPATH:"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0\lib\win32" flexRelease_x86.lib cuda.lib cudart.lib glew32.lib freeglut.lib glaux.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib opencv_ts300.lib opencv_world300.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"..\..\..\bin\Win32\flexDemoRelease.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"..\..\..\bin\Win32\flexDemoRelease.lib" /MACHINE:X86 /SAFESEH /SAFESEH:NO Win32\Release\aabbtree.obj
          Win32\Release\core.obj
@@ -43,4 +31,4 @@
 
 生成成功。
 
-已用时间 00:00:03.12
+已用时间 00:00:02.71
