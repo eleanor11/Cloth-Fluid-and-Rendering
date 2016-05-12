@@ -247,6 +247,7 @@ bool g_drip;
 bool g_markColor;
 bool g_texture;
 bool g_noise;
+bool g_saturation;
 
 bool g_camInit = false;
 
@@ -870,16 +871,24 @@ void GLUTUpdate()
 		//absorb
 		if (g_absorb) {
 			Absorbing();
+			//g_absorb = false;
 		}
 		//diffuse
 		if (g_diffuse) {
-			CalculateTriangleCenters();
-			CalculateThetas();
-			Diffusing();
+			if (g_shaderMode == 0) {
+				CalculateTriangleCenters();
+				CalculateThetas();
+				Diffusing();
+			}
+			else {
+				g_maps.renewDiffusing(g_kDiffusion, g_kDiffusionGravity);
+			}
 		}
 		//drip
 		if (g_drip) {
-			Dripping();
+			if (g_shaderMode == 0) {
+				Dripping();
+			}
 		}
 
 		if (g_shaderMode > 0 && (g_absorb || g_diffuse || g_drip)) {

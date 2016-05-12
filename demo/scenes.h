@@ -3932,12 +3932,13 @@ public:
 		e.mDir = Normalize(Vec3(0.0f, -1.0f, 0.0f));
 		e.mEnabled = true;
 		//e.mPos = Vec3(-0.25f, 1.75f, 0.5f);
-		e.mPos = Vec3(0.0f, 1.25f, 0.5f);
+		e.mPos = Vec3(0.3f, 1.25f, 0.3f);
 		//e.mRight = Cross(e.mDir, Vec3(0.0f, 0.0f, 1.0f));
 		e.mRight = Cross(e.mDir, Vec3(0.0f, 0.0f, 1.0f));
 		e.mSpeed = (g_params.mFluidRestDistance / (g_dt * 2.0f));
 		e.mWidth = g_emitterWidth;
-		//e.mWidth = 1;
+		
+		e.mWidth = 15;
 
 		g_emitters.push_back(e);
 
@@ -3948,7 +3949,7 @@ public:
 
 
 		/*test*/
-		if (1) {
+		if (0) {
 			g_absorb = true;
 			g_diffuse = false;
 			g_drip = false;
@@ -3959,6 +3960,10 @@ public:
 		if (1) {
 			g_shaderMode = 2;
 			
+		}
+		if (1) {
+			g_saturation = true;
+			g_maps.setMaxmap(g_saturation);
 		}
 	}
 
@@ -4002,6 +4007,10 @@ public:
 		}
 		if (imguiCheck("Noise", bool(g_noise != 0))) {
 			g_noise = !g_noise;
+		}
+		if (imguiCheck("Max Saturation", bool(g_saturation != 0))) {
+			g_saturation = !g_saturation;
+			g_maps.setMaxmap(g_saturation);
 		}
 		if (imguiCheck("Mark", bool(g_markColor != 0))) {
 			g_markColor = !g_markColor;

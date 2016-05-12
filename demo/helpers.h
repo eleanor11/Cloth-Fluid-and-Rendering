@@ -1632,6 +1632,8 @@ bool Collide(int i, int j, Vec2 &pos) {
 		if (posX.z < posY.z) pos.y = 0;
 		else pos.y = 1;
 
+		if (pos.y == 0) std::cout << '0' << std::endl;
+
 		return true;
 	}
 
@@ -1668,7 +1670,6 @@ void UpdateSaturations(int idx, Vec2 pos) {
 		break;
 	}
 
-	g_maps.renewAbsorbing(idx / g_dy, idx % g_dy, pos, g_mDrip);
 }
 
 void test() {
@@ -1700,16 +1701,34 @@ void test() {
 	//UpdateSaturations(31, Vec2(1, 1));
 	//UpdateSaturations(100, Vec2(1, 0));
 
-	for (int i = 0; i < 32; i++) {
-		for (int j = 0; j < 32; j++) {
-			g_maps.renewAbsorbing(i, j, Vec2(0, 0), g_mDrip);
+	//for (int i = 0; i < 32; i++) {
+	//	for (int j = 0; j < 32; j++) {
+	//		g_maps.renewAbsorbing(i, j, Vec2(0, 0), g_mDrip);
+	//	}
+	//}
+	//float tmp = g_mDrip / 10;
+	//for (int i = 0; i < 32; i++) {
+	//	for (int j = 0; j < 32; j++) {
+	//		if (i > 8 && i < 24 && j > 4 && j < 28) continue;
+	//		g_maps.renewAbsorbing(i, j, Vec2(0, 0), tmp);
+	//		g_maps.renewAbsorbing(i, j, Vec2(0, 1), tmp);
+	//	}
+	//}
+
+
+	float tmp = g_mDrip / 10;
+	for (int i = 8; i < 24; i++) {
+		for (int j = 4; j < 28; j++) {
+			g_maps.renewAbsorbing(i, j, Vec2(0, 0), tmp);
+			g_maps.renewAbsorbing(i, j, Vec2(0, 1), tmp);
+			g_maps.renewAbsorbing(i, j, Vec2(1, 0), tmp);
+			g_maps.renewAbsorbing(i, j, Vec2(1, 1), tmp);
 		}
 	}
-
 }
 
 void Absorbing() {
-	test();
+	//test();
 
 	int activeCount = flexGetActiveCount(g_flex);
 
@@ -1734,17 +1753,24 @@ void Absorbing() {
 			}
 
 			//cloth position j
-			UpdateSaturations(collidePosition, pos);
+			if (g_shaderMode == 0) {
+				UpdateSaturations(collidePosition, pos);
+			}
+			else {
+				g_maps.renewAbsorbing(collidePosition / g_dy, collidePosition % g_dy, pos, g_mDrip);
+			}
 
 			//fluid point i
 			g_positions[i] = g_positions[activeCount - 1];
-			g_positions[activeCount - 1] = Vec4();
+			//g_positions[activeCount - 1] = Vec4();
 
 			g_velocities[i] = g_velocities[activeCount - 1];
 			g_velocities[activeCount - 1] = 0.0f;
+			//delete &g_velocities[activeCount - 1];
 
 			g_phases[i] = g_phases[activeCount - 1];
 			g_phases[activeCount] = 0;
+			//delete &g_phases[activeCount - 1];
 
 			activeCount--;
 			continue;
@@ -1895,7 +1921,7 @@ void Diffusing() {
 		}
 	}
 
-	g_maps.renewDiffusing(g_kDiffusion, g_kDiffusionGravity);
+	//g_maps.renewDiffusing(g_kDiffusion, g_kDiffusionGravity);
 
 }
 

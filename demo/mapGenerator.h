@@ -2,6 +2,8 @@
 #include <core\core.hpp>
 #include <highgui\highgui.hpp>
 
+#include <math.h>
+
 using namespace cv;
 
 const float MAXSATURATION = 10.0;
@@ -62,6 +64,12 @@ public:
 	std::string getName() {
 		return name;
 	}
+	void setMaxmap(bool mm) {
+		maxMap = mm;
+		if (maxMap) {
+			readMSmap();
+		}
+	}
 
 
 	void writeToFile() {
@@ -73,38 +81,9 @@ public:
 
 	void renewAbsorbing(int x, int y, Vec2 pos, float s) {
 
-		int sx = x * 2 + int(pos.x) - 1;
-		int sy = y * 2 + int(pos.y) - 1;
-		//std::cout << x << ' ' << y << ' ' << sx << ' ' << sy << ' ';
-		if (sx < 0) sx = 0;
-		if (sx >= rows) sx = rows - 1;
-		if (sy < 0) sy = 0;
-		if (sy >= cols) sy = cols - 1;
+		Absorbing0(x, y, pos, s);
 
-		int t = sx * cols + sy;
-		//std::cout << mx << ' ' << my << std::endl;
-		//std::cout << bmat.channels() << std::endl;
-		//std::cout << t << std::endl;
-		float max = MAXSATURATION;
-		if (maxMap && msMap[t] < MAXSATURATION) {
-			//max = msMap[t];
-			max = 1.0;
-		}
 
-		if (bitMap[t] == 0) {
-			saturationRow[t] += s;
-			if (saturationRow[t] > max) saturationRow[t] = max;
-			//std::cout << s << std::endl;
-			//std::cout << saturationRow[sx * DIMX * 2 + sy] << std::endl;
-		}
-		else if (bitMap[t] == 255) {
-			saturationCol[t] += s;
-			if (saturationCol[t] > max) saturationCol[t] = max;
-			//std::cout << saturationCol[sx * DIMX * 2 + sy] << std::endl;
-		}
-		else {
-			//std::cout << "no\n";
-		}
 	}
 	/*for test*/
 	void renewAbsorbing(int x, int y, Vec2 pos, float s, int level) {
@@ -221,17 +200,23 @@ private:
 	}
 
 	void readMSmap() {
-		Mat msmat = imread("../../data/textures/ms" + name + ".bmp");
+		if (msMap.size() > 0) return;
 
-		if (msmat.rows == 0) return;
-		maxMap = true;
+		Mat msmat = imread("../../data/textures/ms" + name + ".bmp");
+		if (msmat.rows == 0) {
+			maxMap = false;
+			return;
+		}
 
 		msMap.resize(saturationSize, 0);
 		int idx = 0;
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < cols; j++) {
-				cv::Vec3b &bgr = msmat.at<cv::Vec3b>(i * 8 + 4, j * 8 + 4);
-				msMap[idx++] = (float)bgr[0] / 255 * MAXSATURATION;
+				cv::Vec3b &bgr = msmat.at<cv::Vec3b>(i, j);
+				//msMap[idx++] = (float)bgr[0] / 255 * MAXSATURATION;
+				float tmp = 1.0 - (float)bgr[0] / 255;
+				tmp = 1 - pow(tmp, 1.0 / 6);
+				msMap[idx++] = tmp * MAXSATURATION;
 			}
 		}
 	}
@@ -249,6 +234,42 @@ private:
 			for (int j = 0; j < 8; j++) {
 				smat.at<uchar>(px + i, py + j) = t;
 			}
+		}
+	}
+
+	void Absorbing0(int x, int y, Vec2 pos, float s) {
+
+		int sx = x * 2 + int(pos.x) - 1;
+		int sy = y * 2 + int(pos.y) - 1;
+		//std::cout << x << ' ' << y << ' ' << sx << ' ' << sy << ' ';
+		if (sx < 0) sx = 0;
+		if (sx >= rows) sx = rows - 1;
+		if (sy < 0) sy = 0;
+		if (sy >= cols) sy = cols - 1;
+
+		int t = sx * cols + sy;
+		//std::cout << mx << ' ' << my << std::endl;
+		//std::cout << bmat.channels() << std::endl;
+		//std::cout << t << std::endl;
+		float max = MAXSATURATION;
+		if (maxMap && msMap[t] < MAXSATURATION) {
+			max = msMap[t];
+			//max = 1.0;
+		}
+
+		if (bitMap[t] == 0) {
+			saturationRow[t] += s;
+			if (saturationRow[t] > max) saturationRow[t] = max;
+			//std::cout << s << std::endl;
+			//std::cout << saturationRow[sx * DIMX * 2 + sy] << std::endl;
+		}
+		else if (bitMap[t] == 255) {
+			saturationCol[t] += s;
+			if (saturationCol[t] > max) saturationCol[t] = max;
+			//std::cout << saturationCol[sx * DIMX * 2 + sy] << std::endl;
+		}
+		else {
+			//std::cout << "no\n";
 		}
 	}
 
@@ -453,14 +474,26 @@ private:
 
 		//renew
 		for (int i = 0; i < saturationSize; i++) {
+			float max = MAXSATURATION;
+			if (maxMap && msMap[i] < MAXSATURATION) {
+				max = msMap[i];
+			}
+
 			saturationRow[i] += deltasRow[i];
+
 			if (saturationRow[i] < 0) {
 				saturationRow[i] = 0;
+			}
+			if (saturationRow[i] > max) {
+				saturationRow[i] = max;
 			}
 
 			saturationCol[i] += deltasCol[i];
 			if (saturationCol[i] < 0) {
 				saturationCol[i] = 0;
+			}
+			if (saturationCol[i] > max) {
+				saturationCol[i] = max;
 			}
 		}
 
