@@ -1632,8 +1632,6 @@ bool Collide(int i, int j, Vec2 &pos) {
 		if (posX.z < posY.z) pos.y = 0;
 		else pos.y = 1;
 
-		if (pos.y == 0) std::cout << '0' << std::endl;
-
 		return true;
 	}
 
@@ -1732,6 +1730,8 @@ void Absorbing() {
 
 	int activeCount = flexGetActiveCount(g_flex);
 
+	//float sum[4] = {0, 0, 0, 0};
+
 	int i = g_numSolidParticles;
 	while (i < activeCount) {
 		int collidePosition = -1;
@@ -1745,6 +1745,10 @@ void Absorbing() {
 
 		//i is absorbable & collided
 		if (g_absorbable[i] && collidePosition > -1) {
+
+			//int t = pos.x + pos.y * 2;
+			//sum[t]++;
+
 			//proportion
 			int tmp = rand() % 10;
 			if (tmp >= 10 * g_kAbsorption) {
@@ -1784,6 +1788,10 @@ void Absorbing() {
 
 		flexSetActive(g_flex, &g_activeIndices[0], activeCount, eFlexMemoryHost);
 	}
+	//int tmp = activeCount - g_numSolidParticles;
+	//if (tmp > 10) {
+	//	std::cout << activeCount - g_numSolidParticles << ' ' << sum[0] << ' ' << sum[1] << ' ' << sum[2] << ' ' << sum[3] << std::endl;
+	//}
 }
 
 
