@@ -47,11 +47,7 @@
 #include "imgui.h"
 #include "imguiRenderGL.h"
 
-/*added by eleanor*/
 
-#include "mapGenerator.h"
-
-/*add end*/
 
 using namespace std;
 
@@ -265,6 +261,9 @@ Vec3 g_clothColorCol;
 
 
 //maps
+
+#include "mapGenerator.h"
+
 vector<string> g_clothStyles;
 int g_clothStyle;
 Maps g_maps;
@@ -882,13 +881,17 @@ void GLUTUpdate()
 			}
 			else {
 				CalculatePointThetas();
-				g_maps.renewDiffusing(g_kDiffusion, g_kDiffusionGravity);
+				g_maps.renewDiffusing();
 			}
 		}
 		//drip
 		if (g_drip) {
 			if (g_shaderMode == 0) {
 				Dripping();
+			}
+			else {
+				g_maps.renewDripping();
+				//g_maps.renewDripping(1890);
 			}
 		}
 

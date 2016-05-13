@@ -1,4 +1,4 @@
-﻿生成启动时间为 2016/5/13 10:34:18。
+﻿生成启动时间为 2016/5/13 13:11:50。
      1>项目“D:\code\visual studio 2013\flex080\demo\compiler\vc11\flexdemo.vcxproj”在节点 2 上(Build 个目标)。
      1>ClCompile:
          D:\tool\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I..\..\.. /I..\..\..\include /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0/include" /Zi /nologo /W3 /WX- /Ox /Oi /Oy- /GL /D _HAS_EXCEPTIONS=0 /D _CRT_SECURE_NO_WARNINGS /D WIN32 /D NDEBUG /D _CONSOLE /D _MBCS /Gm- /EHsc /MT /GS- /Gy /arch:SSE2 /fp:fast /Zc:wchar_t /Zc:forScope /Fo"Win32\Release\\" /Fd"Win32\Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\main.cpp
@@ -6,9 +6,10 @@
      1>D:\tool\opencv3.0\build\include\opencv2/core/mat.hpp(1965): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
      1>D:\tool\opencv3.0\build\include\opencv2/core/persistence.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
      1>D:\tool\opencv3.0\build\include\opencv2/core/utility.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-     1>d:\code\visual studio 2013\flex080\demo\mapGenerator.h(182): warning C4244: “=”: 从“float”转换到“uchar”，可能丢失数据
-     1>d:\code\visual studio 2013\flex080\demo\mapGenerator.h(219): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
-     1>d:\code\visual studio 2013\flex080\demo\mapGenerator.h(220): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+     1>d:\code\visual studio 2013\flex080\demo\mapGenerator.h(194): warning C4244: “=”: 从“float”转换到“uchar”，可能丢失数据
+     1>d:\code\visual studio 2013\flex080\demo\mapGenerator.h(231): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+     1>d:\code\visual studio 2013\flex080\demo\mapGenerator.h(232): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+     1>d:\code\visual studio 2013\flex080\demo\mapGenerator.h(533): warning C4244: “-=”: 从“double”转换到“float”，可能丢失数据
      1>d:\code\visual studio 2013\flex080\demo\helpers.h(881): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
      1>d:\code\visual studio 2013\flex080\demo\helpers.h(884): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
      1>d:\code\visual studio 2013\flex080\demo\helpers.h(887): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
@@ -43,4 +44,4 @@
 
 生成成功。
 
-已用时间 00:00:03.21
+已用时间 00:00:03.28

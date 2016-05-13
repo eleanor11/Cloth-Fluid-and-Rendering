@@ -81,10 +81,21 @@ public:
 
 	void renewAbsorbing(int x, int y, Vec2 pos, float s) {
 
-		Absorbing0(x, y, pos, s);
+		Absorbing(x, y, pos, s);
 
 
 	}
+	void renewPointTheta(int i, Vec4 thetas) {
+		pointThetas[i] = thetas;
+	}
+	void renewDiffusing() {
+		Diffusing();
+	}
+	void renewDripping() {
+		Dripping();
+	}
+
+
 	/*for test*/
 	void renewAbsorbing(int x, int y, Vec2 pos, float s, int level) {
 		int sx = x * 2 + int(pos.x) - 1;
@@ -102,11 +113,10 @@ public:
 			saturationCol[t] += s;
 		}
 	}
-	void renewPointTheta(int i, Vec4 thetas) {
-		pointThetas[i] = thetas;
-	}
-	void renewDiffusing(float kDiffusion, float kDiffusionGravity) {
-		Diffusing(kDiffusion, kDiffusionGravity );
+	void renewDripping(int index) {
+		int activeCount = flexGetActiveCount(g_flex);
+		createParticle(index, activeCount);
+		flexSetActive(g_flex, &g_activeIndices[0], activeCount, eFlexMemoryHost);
 	}
 
 private:
@@ -141,6 +151,8 @@ private:
 		kDiffusionLevel = 0.05;
 		kDiffustionLevelGravity = 0.2;
 		pointThetas.resize(DIMX * DIMY);
+
+		dripBuffer.resize(saturationSize, 0);
 
 		maxMap = false;
 	}
@@ -239,7 +251,7 @@ private:
 		}
 	}
 
-	void Absorbing0(int x, int y, Vec2 pos, float s) {
+	void Absorbing(int x, int y, Vec2 pos, float s) {
 
 		int sx = x * 2 + int(pos.x) - 1;
 		int sy = y * 2 + int(pos.y) - 1;
@@ -253,21 +265,20 @@ private:
 		//std::cout << mx << ' ' << my << std::endl;
 		//std::cout << bmat.channels() << std::endl;
 		//std::cout << t << std::endl;
-		float max = MAXSATURATION;
-		if (maxMap && msMap[t] < MAXSATURATION) {
-			max = msMap[t];
-			//max = 1.0;
-		}
+		//float max = MAXSATURATION;
+		//if (maxMap && msMap[t] < MAXSATURATION) {
+		//	max = msMap[t];
+		//}
 
 		if (bitMap[t] == 0) {
 			saturationRow[t] += s;
-			if (saturationRow[t] > max) saturationRow[t] = max;
+			//if (saturationRow[t] > max) saturationRow[t] = max;
 			//std::cout << s << std::endl;
 			//std::cout << saturationRow[sx * DIMX * 2 + sy] << std::endl;
 		}
 		else if (bitMap[t] == 255) {
 			saturationCol[t] += s;
-			if (saturationCol[t] > max) saturationCol[t] = max;
+			//if (saturationCol[t] > max) saturationCol[t] = max;
 			//std::cout << saturationCol[sx * DIMX * 2 + sy] << std::endl;
 		}
 		else {
@@ -275,7 +286,7 @@ private:
 		}
 	}
 
-	void Diffusing(float kDiffusion, float kDiffusionGravity) {
+	void Diffusing() {
 		std::vector<float> deltasRow;
 		std::vector<float> deltasCol;
 		deltasRow.resize(saturationSize, 0);
@@ -325,25 +336,25 @@ private:
 			//with gravity
 			//row self
 			if (y > 0) {
-				ds1 = getMax(0.0, kDiffusion * (si - saturationRow[i - 1]) + kDiffusionGravity * si * thetas[0]);
+				ds1 = getMax(0.0, g_kDiffusion * (si - saturationRow[i - 1]) + g_kDiffusionGravity * si * thetas[0]);
 				sum += ds1;
 			}
 			if (y < cols - 1) {
-				ds2 = getMax(0.0, kDiffusion * (si - saturationRow[i + 1]) + kDiffusionGravity * si * thetas[1]);
+				ds2 = getMax(0.0, g_kDiffusion * (si - saturationRow[i + 1]) + g_kDiffusionGravity * si * thetas[1]);
 				sum += ds2;
 			}
 			//row side
 			if (x > 0 && row[x - 1]) {
-				ds3 = getMax(0.0, kDiffusionSide * (kDiffusion * (si - saturationRow[i - cols]) + kDiffusionGravity * si * thetas[2]));
+				ds3 = getMax(0.0, kDiffusionSide * (g_kDiffusion * (si - saturationRow[i - cols]) + g_kDiffusionGravity * si * thetas[2]));
 				sum += ds3;
 			}
 			if (x < rows - 1 && row[x + 1]) {
-				ds4 = getMax(0.0, kDiffusionSide * (kDiffusion * (si - saturationRow[i + cols]) + kDiffusionGravity * si * thetas[3]));
+				ds4 = getMax(0.0, kDiffusionSide * (g_kDiffusion * (si - saturationRow[i + cols]) + g_kDiffusionGravity * si * thetas[3]));
 				sum += ds4;
 			}
 			//row level
 			if (col[y]) {
-				ds5 = getMax(0.0, kDiffusionLevel * (kDiffusion * (si - saturationCol[i]) + kDiffustionLevelGravity * si * theta));
+				ds5 = getMax(0.0, kDiffusionLevel * (g_kDiffusion * (si - saturationCol[i]) + kDiffustionLevelGravity * si * theta));
 				sum += ds5;
 			}
 
@@ -423,25 +434,25 @@ private:
 			//with gravity
 			//col self
 			if (x > 0) {
-				ds1 = getMax(0.0, kDiffusion * (si - saturationCol[i - cols]) + kDiffusionGravity * si * thetas[2]);
+				ds1 = getMax(0.0, g_kDiffusion * (si - saturationCol[i - cols]) + g_kDiffusionGravity * si * thetas[2]);
 				sum += ds1;
 			}
 			if (x < rows - 1) {
-				ds2 = getMax(0.0, kDiffusion * (si - saturationCol[i + cols]) + kDiffusionGravity * si * thetas[3]);
+				ds2 = getMax(0.0, g_kDiffusion * (si - saturationCol[i + cols]) + g_kDiffusionGravity * si * thetas[3]);
 				sum += ds2;
 			}
 			//col side
 			if (y > 0 && col[y - 1]) {
-				ds3 = getMax(0.0, kDiffusionSide * (kDiffusion * (si - saturationCol[i - 1]) + kDiffusionGravity * si * thetas[0]));
+				ds3 = getMax(0.0, kDiffusionSide * (g_kDiffusion * (si - saturationCol[i - 1]) + g_kDiffusionGravity * si * thetas[0]));
 				sum += ds3;
 			}
 			if (y < cols - 1 && col[y + 1]) {
-				ds4 = getMax(0.0, kDiffusionSide * (kDiffusion * (si - saturationCol[i + 1]) + kDiffusionGravity * si * thetas[1]));
+				ds4 = getMax(0.0, kDiffusionSide * (g_kDiffusion * (si - saturationCol[i + 1]) + g_kDiffusionGravity * si * thetas[1]));
 				sum += ds4;
 			}
 			//col level
 			if (row[x]) {
-				ds5 = getMax(0.0, kDiffusionLevel * (kDiffusion * (si - saturationRow[i]) + kDiffustionLevelGravity * si * theta));
+				ds5 = getMax(0.0, kDiffusionLevel * (g_kDiffusion * (si - saturationRow[i]) + kDiffustionLevelGravity * si * theta));
 				sum += ds5;
 			}
 
@@ -476,28 +487,145 @@ private:
 
 		//renew
 		for (int i = 0; i < saturationSize; i++) {
-			float max = MAXSATURATION;
-			if (maxMap && msMap[i] < MAXSATURATION) {
-				max = msMap[i];
-			}
+			//float max = MAXSATURATION;
+			//if (maxMap && msMap[i] < MAXSATURATION) {
+			//	max = msMap[i];
+			//}
 
 			saturationRow[i] += deltasRow[i];
 
 			if (saturationRow[i] < 0) {
 				saturationRow[i] = 0;
 			}
-			if (saturationRow[i] > max) {
-				saturationRow[i] = max;
-			}
+			//if (saturationRow[i] > max) {
+			//	saturationRow[i] = max;
+			//}
 
 			saturationCol[i] += deltasCol[i];
 			if (saturationCol[i] < 0) {
 				saturationCol[i] = 0;
 			}
-			if (saturationCol[i] > max) {
-				saturationCol[i] = max;
+			//if (saturationCol[i] > max) {
+			//	saturationCol[i] = max;
+			//}
+		}
+
+	}
+
+	void createParticle(int index, int &activeCount) {
+		Vec3 emitterDir = Vec3(0.0f, -1.0f, 0.0f);
+		Vec3 emitterRight = Vec3(-1.0f, 0.0f, 0.0f);
+
+		//position
+		int x = index / cols;
+		int y = index % cols;
+		int px = (x + 1) / 2;
+		int py = (y + 1) / 2;
+		Vec3 pos = g_positions[px * DIMY + py];
+		int tx = (x + 1) % 2 * 2 - 1;
+		int ty = (y + 1) % 2 * 2 - 1;
+		Vec3 dPos = g_positions[(px + tx) * DIMY + (py + ty)];
+		Vec3 dir = (dPos - pos) / 2;
+		int a = rand() % 101;
+		int b = rand() % 101;
+		int c = rand() % 101;
+		Vec3 emitterPos = pos + Vec3(a * dir.x + b * dir.y + c * dir.z) / 100.0;
+		emitterPos.y -= g_params.mCollisionDistance *2.0;
+
+		//cout << pos.x << ' ' << pos.y << ' ' << pos.z << '\t'
+		//	<< dPos.x << ' ' << dPos.y << ' ' << dPos.z << endl
+		//	<< dir.x << ' ' << dir.y << ' ' << dir.z << '\t'
+		//	<< emitterPos.x << ' ' << emitterPos.y << ' ' << emitterPos.z << endl
+		//	<< endl;
+
+		float r;
+		int phase;
+
+		if (g_params.mFluid) {
+			r = g_params.mFluidRestDistance;
+			phase = flexMakePhase(0, eFlexPhaseSelfCollide | eFlexPhaseFluid);
+		}
+		else {
+			r = g_params.mSolidRestDistance;
+			phase = flexMakePhase(0, eFlexPhaseSelfCollide);
+		}
+
+		if (size_t(activeCount) < g_positions.size()) {
+			g_positions[activeCount] = Vec4(emitterPos, 1.0f);
+			g_velocities[activeCount] = Vec3(0.0f, 0.0f, 0.0f);
+			g_phases[activeCount] = phase;
+			g_absorbable[activeCount] = true;
+			activeCount++;
+		}
+
+	}
+	void Dripping() {
+		if (dripBuffer.size() == 0) {
+			dripBuffer.resize(saturationSize, 0);
+		}
+
+		int activeCount = flexGetActiveCount(g_flex);
+
+		if (maxMap) {
+			for (int i = 0; i < saturationSize; i++) {
+				float max = MAXSATURATION;
+				if (msMap[i] < MAXSATURATION) {
+					max = msMap[i];
+				}
+				if (bitMap[i] == 0) {
+					if (saturationRow[i] > max) {
+						float m = saturationRow[i] - max;
+						dripBuffer[i] += m;
+						while (dripBuffer[i] > g_mDrip) {
+							createParticle(i, activeCount);
+							dripBuffer[i] -= g_mDrip;
+						}
+						saturationRow[i] = max;
+					}
+				}
+				else if (bitMap[i] == 1) {
+					if (saturationCol[i] > max) {
+						float m = saturationCol[i] - max;
+						dripBuffer[i] += m;
+						while (dripBuffer[i] > g_mDrip) {
+							createParticle(i, activeCount);
+							dripBuffer[i] -= g_mDrip;
+						}
+						saturationCol[i] = max;
+					}
+				}
 			}
 		}
+		else {
+			float max = MAXSATURATION;
+			for (int i = 0; i < saturationSize; i++) {
+				if (bitMap[i] == 0) {
+					if (saturationRow[i] > max) {
+						float m = saturationRow[i] - max;
+						dripBuffer[i] += m;
+						while (dripBuffer[i] > g_mDrip) {
+							createParticle(i, activeCount);
+							dripBuffer[i] -= g_mDrip;
+						}
+						saturationRow[i] = max;
+					}
+				}
+				else if (bitMap[i] == 1) {
+					if (saturationCol[i] > max) {
+						float m = saturationCol[i] - max;
+						dripBuffer[i] += m;
+						while (dripBuffer[i] > g_mDrip) {
+							createParticle(i, activeCount);
+							dripBuffer[i] -= g_mDrip;
+						}
+						saturationCol[i] = max;
+					}
+				}
+			}
+
+		}
+
+		flexSetActive(g_flex, &g_activeIndices[0], activeCount, eFlexMemoryHost);
 
 	}
 
