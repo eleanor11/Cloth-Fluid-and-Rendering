@@ -331,7 +331,7 @@ struct Rope
 
 vector<Rope> g_ropes;
 
-inline float sqr(float x) { return x*x; }
+
 
 #define cudaCheck(x) { cudaError_t err = x; if (err != cudaSuccess) { printf("Cuda error: %d in %s at %s:%d\n", err, #x, __FILE__, __LINE__); assert(0); } }
 
@@ -869,8 +869,14 @@ void GLUTUpdate()
 
 		//absorb
 		if (g_absorb) {
-			Absorbing();
-			//g_absorb = false;
+			if (g_shaderMode == 0) {
+				Absorbing();
+				//g_absorb = false;
+			}
+			else {
+				//test();
+				g_maps.renewAbsorbing();
+			}
 		}
 		//diffuse
 		if (g_diffuse) {

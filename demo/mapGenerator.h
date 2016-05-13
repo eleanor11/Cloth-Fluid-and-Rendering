@@ -12,6 +12,9 @@ const int DIMY = 32;
 
 const int WIDTHBASE = 8;
 
+
+inline float sqr(float x) { return x*x; }
+
 float getMax(float x, float y) {
 	if (x > y) return x;
 	else return y;
@@ -79,12 +82,13 @@ public:
 	}
 
 
-	void renewAbsorbing(int x, int y, Vec2 pos, float s) {
+	void renewAbsorbing() {
 
-		Absorbing(x, y, pos, s);
+		Absorbing();
 
 
 	}
+
 	void renewPointTheta(int i, Vec4 thetas) {
 		pointThetas[i] = thetas;
 	}
@@ -97,6 +101,10 @@ public:
 
 
 	/*for test*/
+	void renewAbsorbing(int x, int y, Vec2 pos, float s) {
+		updateSaturation(x, y, pos, s);
+
+	}
 	void renewAbsorbing(int x, int y, Vec2 pos, float s, int level) {
 		int sx = x * 2 + int(pos.x) - 1;
 		int sy = y * 2 + int(pos.y) - 1;
@@ -170,7 +178,7 @@ private:
 			}
 		}
 
-		//imwrite("../../data/textures/s" + name + ".bmp", smat);
+		imwrite("../../data/textures/s" + name + ".bmp", smat);
 	}
 
 	void renewSaturationMap() {
@@ -235,23 +243,30 @@ private:
 		}
 	}
 
-	void renewSaturation(int x, int y, Vec2 pos, float s) {
 
-		int px = (x * 2 + int(pos.x)) * 8;
-		int py = (y * 2 + int(pos.y)) * 8;
+	bool collide(int i, int j, Vec2 &pos) {
+		Vec4 posX = g_positions[i];
+		Vec4 posY = g_positions[j];
 
-		int t = smat.at<uchar>(px, py);
-		t += (int)(s / MAXSATURATION * 255);
-		if (t > 255) t = 255;
+		if (posX.y - posY.y > g_params.mSolidRestDistance) return false;
+		if (posX.x - posY.x > g_params.mSolidRestDistance) return false;
+		if (posX.z - posY.z > g_params.mSolidRestDistance) return false;
 
-		for (int i = 0; i < 8; i++) {
-			for (int j = 0; j < 8; j++) {
-				smat.at<uchar>(px + i, py + j) = t;
-			}
+		float dist = sqrt(sqr(posX.x - posY.x) + sqr(posX.y - posY.y) + sqr(posX.z - posY.z));
+
+		if (dist <= g_params.mSolidRestDistance) {
+			if (posX.x < posY.x) pos.x = 0;
+			else pos.x = 1;
+			if (posX.z < posY.z) pos.y = 0;
+			else pos.y = 1;
+
+			return true;
 		}
+
+		return false;
 	}
 
-	void Absorbing(int x, int y, Vec2 pos, float s) {
+	bool updateSaturation(int x, int y, Vec2 pos, float s) {
 
 		int sx = x * 2 + int(pos.x) - 1;
 		int sy = y * 2 + int(pos.y) - 1;
@@ -265,24 +280,80 @@ private:
 		//std::cout << mx << ' ' << my << std::endl;
 		//std::cout << bmat.channels() << std::endl;
 		//std::cout << t << std::endl;
-		//float max = MAXSATURATION;
-		//if (maxMap && msMap[t] < MAXSATURATION) {
-		//	max = msMap[t];
-		//}
+
+		if (maxMap && msMap[t] < MAXSATURATION) {
+			if (bitMap[t] == 0 && saturationRow[t] + s > msMap[t]) {
+				return false;
+			}
+			if (bitMap[t] == 255 && saturationCol[t] + s > msMap[t]) {
+				return false;
+			}
+
+		}
 
 		if (bitMap[t] == 0) {
 			saturationRow[t] += s;
-			//if (saturationRow[t] > max) saturationRow[t] = max;
-			//std::cout << s << std::endl;
-			//std::cout << saturationRow[sx * DIMX * 2 + sy] << std::endl;
 		}
 		else if (bitMap[t] == 255) {
 			saturationCol[t] += s;
-			//if (saturationCol[t] > max) saturationCol[t] = max;
-			//std::cout << saturationCol[sx * DIMX * 2 + sy] << std::endl;
 		}
 		else {
 			//std::cout << "no\n";
+		}
+
+		return true;
+	}
+
+	void Absorbing() {
+		int activeCount = flexGetActiveCount(g_flex);
+
+		int i = g_numSolidParticles;
+		while (i < activeCount) {
+			int collidePosition = -1;
+			Vec2 pos;
+			for (int j = 0; j < g_numSolidParticles; j++) {
+				if (collide(i, j, pos)) {
+					collidePosition = j;
+					break;
+				}
+			}
+
+			//i is absorbable & collided
+			if (g_absorbable[i] && collidePosition > -1) {
+
+				//proportion
+				int tmp = rand() % 10;
+				if (tmp >= 10 * g_kAbsorption) {
+					i++;
+					continue;
+				}
+
+				//cloth position j
+				if (!updateSaturation(collidePosition / g_dy, collidePosition % g_dy, pos, g_mDrip)) {
+					i++;
+					continue;
+				}
+
+				//fluid point i
+				g_positions[i] = g_positions[activeCount - 1];
+
+				g_velocities[i] = g_velocities[activeCount - 1];
+				g_velocities[activeCount - 1] = 0.0f;
+
+				g_phases[i] = g_phases[activeCount - 1];
+				g_phases[activeCount] = 0;
+
+				activeCount--;
+				continue;
+			}
+
+			if (!g_absorbable[i] && collidePosition == -1) {
+				g_absorbable[i] = true;
+			}
+
+			i++;
+
+			flexSetActive(g_flex, &g_activeIndices[0], activeCount, eFlexMemoryHost);
 		}
 	}
 
@@ -571,10 +642,12 @@ private:
 				float max = MAXSATURATION;
 				if (msMap[i] < MAXSATURATION) {
 					max = msMap[i];
+					cout << max << endl;
 				}
 				if (bitMap[i] == 0) {
 					if (saturationRow[i] > max) {
 						float m = saturationRow[i] - max;
+						//cout << saturationRow[i] << ' ' << max << endl;
 						dripBuffer[i] += m;
 						while (dripBuffer[i] > g_mDrip) {
 							createParticle(i, activeCount);
@@ -583,7 +656,7 @@ private:
 						saturationRow[i] = max;
 					}
 				}
-				else if (bitMap[i] == 1) {
+				else if (bitMap[i] == 255) {
 					if (saturationCol[i] > max) {
 						float m = saturationCol[i] - max;
 						dripBuffer[i] += m;
@@ -610,7 +683,7 @@ private:
 						saturationRow[i] = max;
 					}
 				}
-				else if (bitMap[i] == 1) {
+				else if (bitMap[i] == 255) {
 					if (saturationCol[i] > max) {
 						float m = saturationCol[i] - max;
 						dripBuffer[i] += m;

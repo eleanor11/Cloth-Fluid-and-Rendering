@@ -1616,7 +1616,7 @@ void CalculateMeshColors() {
 
 
 //absorb
-bool Collide(int i, int j, Vec2 &pos) {
+bool Collide(int i, int j) {
 	Vec4 posX = g_positions[i];
 	Vec4 posY = g_positions[j];
 
@@ -1627,18 +1627,13 @@ bool Collide(int i, int j, Vec2 &pos) {
 	float dist = sqrt(sqr(posX.x - posY.x) + sqr(posX.y - posY.y) + sqr(posX.z - posY.z));
 
 	if (dist <= g_params.mSolidRestDistance) {
-		if (posX.x < posY.x) pos.x = 0;
-		else pos.x = 1;
-		if (posX.z < posY.z) pos.y = 0;
-		else pos.y = 1;
-
 		return true;
 	}
 
 	return false;
 
 }
-void UpdateSaturations(int idx, Vec2 pos) {
+void UpdateSaturations(int idx) {
 	int num = g_pointTriangleNums[idx];
 
 	Vec4 tmp1 = g_pointTriangles[idx * 2];
@@ -1699,15 +1694,15 @@ void test() {
 	//UpdateSaturations(31, Vec2(1, 1));
 	//UpdateSaturations(100, Vec2(1, 0));
 
-	//float tmp = g_mDrip / 10;
-	//for (int i = 0; i < 32; i++) {
-	//	for (int j = 0; j < 32; j++) {
-	//		g_maps.renewAbsorbing(i, j, Vec2(0, 0), tmp);
-	//		g_maps.renewAbsorbing(i, j, Vec2(0, 1), tmp);
-	//		g_maps.renewAbsorbing(i, j, Vec2(1, 0), tmp);
-	//		g_maps.renewAbsorbing(i, j, Vec2(1, 1), tmp);
-	//	}
-	//}
+	float tmp = g_mDrip / 10;
+	for (int i = 0; i < 32; i++) {
+		for (int j = 0; j < 32; j++) {
+			g_maps.renewAbsorbing(i, j, Vec2(0, 0), tmp);
+			g_maps.renewAbsorbing(i, j, Vec2(0, 1), tmp);
+			g_maps.renewAbsorbing(i, j, Vec2(1, 0), tmp);
+			g_maps.renewAbsorbing(i, j, Vec2(1, 1), tmp);
+		}
+	}
 
 	//float tmp = g_mDrip / 10;
 	//for (int i = 0; i < 32; i++) {
@@ -1731,7 +1726,6 @@ void test() {
 }
 
 void Absorbing() {
-	//test();
 
 	int activeCount = flexGetActiveCount(g_flex);
 
@@ -1740,9 +1734,8 @@ void Absorbing() {
 	int i = g_numSolidParticles;
 	while (i < activeCount) {
 		int collidePosition = -1;
-		Vec2 pos;
 		for (int j = 0; j < g_numSolidParticles; j++) {
-			if (Collide(i, j, pos)) {
+			if (Collide(i, j)) {
 				collidePosition = j;
 				break;
 			}
@@ -1762,12 +1755,7 @@ void Absorbing() {
 			}
 
 			//cloth position j
-			if (g_shaderMode == 0) {
-				UpdateSaturations(collidePosition, pos);
-			}
-			else {
-				g_maps.renewAbsorbing(collidePosition / g_dy, collidePosition % g_dy, pos, g_mDrip);
-			}
+			UpdateSaturations(collidePosition);
 
 			//fluid point i
 			g_positions[i] = g_positions[activeCount - 1];
