@@ -116,6 +116,8 @@ private:
 	std::vector<int> bitMap;
 	std::vector<float> msMap;
 
+	std::vector<float> dripBuffer;
+
 	std::vector<bool> row, col;
 
 	std::vector<Vec4> pointThetas;

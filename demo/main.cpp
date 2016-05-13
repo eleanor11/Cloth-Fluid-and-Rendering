@@ -877,10 +877,11 @@ void GLUTUpdate()
 		if (g_diffuse) {
 			if (g_shaderMode == 0) {
 				CalculateTriangleCenters();
-				CalculateThetas();
+				CalculateTriangleThetas();
 				Diffusing();
 			}
 			else {
+				CalculatePointThetas();
 				g_maps.renewDiffusing(g_kDiffusion, g_kDiffusionGravity);
 			}
 		}

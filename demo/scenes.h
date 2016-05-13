@@ -3938,7 +3938,7 @@ public:
 		e.mSpeed = (g_params.mFluidRestDistance / (g_dt * 2.0f));
 		e.mWidth = g_emitterWidth;
 		
-		e.mWidth = 15;
+		e.mWidth = 8;
 
 		g_emitters.push_back(e);
 
@@ -3950,7 +3950,7 @@ public:
 
 		/*test*/
 		if (0) {
-			g_absorb = true;
+			g_absorb = false;
 			g_diffuse = false;
 			g_drip = false;
 			g_markColor = false;
@@ -3961,7 +3961,7 @@ public:
 			g_shaderMode = 2;
 			
 		}
-		if (1) {
+		if (0) {
 			g_saturation = true;
 			g_maps.setMaxmap(g_saturation);
 		}

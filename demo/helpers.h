@@ -1699,11 +1699,16 @@ void test() {
 	//UpdateSaturations(31, Vec2(1, 1));
 	//UpdateSaturations(100, Vec2(1, 0));
 
+	//float tmp = g_mDrip / 10;
 	//for (int i = 0; i < 32; i++) {
 	//	for (int j = 0; j < 32; j++) {
-	//		g_maps.renewAbsorbing(i, j, Vec2(0, 0), g_mDrip);
+	//		g_maps.renewAbsorbing(i, j, Vec2(0, 0), tmp);
+	//		g_maps.renewAbsorbing(i, j, Vec2(0, 1), tmp);
+	//		g_maps.renewAbsorbing(i, j, Vec2(1, 0), tmp);
+	//		g_maps.renewAbsorbing(i, j, Vec2(1, 1), tmp);
 	//	}
 	//}
+
 	//float tmp = g_mDrip / 10;
 	//for (int i = 0; i < 32; i++) {
 	//	for (int j = 0; j < 32; j++) {
@@ -1714,15 +1719,15 @@ void test() {
 	//}
 
 
-	float tmp = g_mDrip / 10;
-	for (int i = 8; i < 24; i++) {
-		for (int j = 4; j < 28; j++) {
-			g_maps.renewAbsorbing(i, j, Vec2(0, 0), tmp);
-			g_maps.renewAbsorbing(i, j, Vec2(0, 1), tmp);
-			g_maps.renewAbsorbing(i, j, Vec2(1, 0), tmp);
-			g_maps.renewAbsorbing(i, j, Vec2(1, 1), tmp);
-		}
-	}
+	//float tmp = g_mDrip / 10;
+	//for (int i = 8; i < 24; i++) {
+	//	for (int j = 4; j < 28; j++) {
+	//		g_maps.renewAbsorbing(i, j, Vec2(0, 0), tmp);
+	//		g_maps.renewAbsorbing(i, j, Vec2(0, 1), tmp);
+	//		g_maps.renewAbsorbing(i, j, Vec2(1, 0), tmp);
+	//		g_maps.renewAbsorbing(i, j, Vec2(1, 1), tmp);
+	//	}
+	//}
 }
 
 void Absorbing() {
@@ -1846,7 +1851,7 @@ float calculateCosTheta(int i, int x) {
 
 	return (-dir.y) / (sqrt(sqr(dir.x) + sqr(dir.y) + sqr(dir.z)));
 }
-void CalculateThetas() {
+void CalculateTriangleThetas() {
 	if (g_triangleThetas.size() == 0) {
 		g_triangleThetas.resize(g_numTriangles);
 	}
@@ -1855,6 +1860,9 @@ void CalculateThetas() {
 		g_triangleThetas[i] = calculateCosTheta(i);
 	}
 
+
+}
+void CalculatePointThetas() {
 	//pointThetas
 	for (int i = 0; i < g_numPoints; i++) {
 		Vec4 thetas;
