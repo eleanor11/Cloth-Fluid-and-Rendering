@@ -558,10 +558,10 @@ private:
 
 		//renew
 		for (int i = 0; i < saturationSize; i++) {
-			//float max = MAXSATURATION;
-			//if (maxMap && msMap[i] < MAXSATURATION) {
-			//	max = msMap[i];
-			//}
+			float max = MAXSATURATION;
+			if (maxMap && msMap[i] < MAXSATURATION) {
+				max = msMap[i];
+			}
 
 			saturationRow[i] += deltasRow[i];
 
@@ -642,7 +642,7 @@ private:
 				float max = MAXSATURATION;
 				if (msMap[i] < MAXSATURATION) {
 					max = msMap[i];
-					cout << max << endl;
+					//cout << max << endl;
 				}
 				if (bitMap[i] == 0) {
 					if (saturationRow[i] > max) {

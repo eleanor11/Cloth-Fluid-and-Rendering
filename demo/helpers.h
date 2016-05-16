@@ -1061,6 +1061,148 @@ void CreateSpringGrid2(Vec3 lower, int dx, int dy, int dz, float radius, int pha
 
 }
 
+//add relations of triangles & points
+//verticle
+void CreateSpringGrid3(Vec3 lower, int dx, int dy, int dz, float radius, int phase, float stretchStiffness, float bendStiffness, float shearStiffness, Vec3 velocity, float invMass) {
+
+	int baseIndex = int(g_positions.size());
+
+	int index = 0;
+
+	for (int z = 0; z < dz; ++z)
+	{
+		for (int y = 0; y < dy; ++y)
+		{
+			for (int x = 0; x < dx; ++x)
+			{
+				Vec3 position = lower + radius*Vec3(float(x), float(-y), float(z));
+
+				g_positions.push_back(Vec4(position.x, position.y, position.z, invMass));
+				g_velocities.push_back(velocity);
+				g_phases.push_back(phase);
+
+				/*add begin*/
+
+				//g_uvs.push_back(Vec3((float)x / (dx - 1) * 16, (float)y / (dy - 1) * 16, 0.0));
+				//g_uvs.push_back(Vec3((float)x / (dx - 1) * 8, (float)y / (dy - 1) * 8, 0.0));
+				//g_uvs.push_back(Vec3((float)x / (dx - 1) * 4, (float)y / (dy - 1) * 4, 0.0));
+				//g_uvs.push_back(Vec3((float)x / (dx - 1), (float)y / (dy - 1), 0.0));
+
+				//g_uvs.push_back(Vec3((float)x / dx * 16, (float)(dy - y) / dy * 16, 0.0));
+				//g_uvs.push_back(Vec3((float)x / dx * 8, (float)(dy - y) / dy * 8, 0.0));
+				//g_uvs.push_back(Vec3((float)x / dx * 4, (float)(dy - 1 - y) / dy * 4, 0.0));
+				g_uvs.push_back(Vec3((float)x / dx, (float)(dy - y) / dy, 0.0));
+
+				int i = GridIndex(x, y, dx);
+				g_pointTriangleNums[i] = 0;
+				g_pointTriangles[i * 2] = Vec4(-1.0, -1.0, -1.0, -1.0);
+				g_pointTriangles[i * 2 + 1] = Vec4(-1.0, -1.0, -1.0, -1.0);
+
+
+				/*add end*/
+
+				if (x > 0 && y > 0)
+				{
+					/*add begin*/
+
+					int p1 = GridIndex(x - 1, y - 1, dx);
+					int p2 = GridIndex(x, y - 1, dx);
+					int p3 = GridIndex(x - 1, y, dx);
+					int p4 = GridIndex(x, y, dx);
+
+					/*add end*/
+
+					g_triangles.push_back(baseIndex + GridIndex(x - 1, y - 1, dx));
+					g_triangles.push_back(baseIndex + GridIndex(x, y - 1, dx));
+					g_triangles.push_back(baseIndex + GridIndex(x, y, dx));
+
+					g_triangles.push_back(baseIndex + GridIndex(x - 1, y - 1, dx));
+					g_triangles.push_back(baseIndex + GridIndex(x, y, dx));
+					g_triangles.push_back(baseIndex + GridIndex(x - 1, y, dx));
+
+					g_triangleNormals.push_back(Vec3(0.0f, 1.0f, 0.0f));
+					g_triangleNormals.push_back(Vec3(0.0f, 1.0f, 0.0f));
+
+					/*add begin*/
+
+					g_saturations.push_back(0.0);
+					g_saturations.push_back(0.0);
+
+					g_triangleNeighbours.push_back(Vec3(-1.0, -1.0, -1.0));
+					g_triangleNeighbours.push_back(Vec3(-1.0, -1.0, -1.0));
+
+					g_trianglePoints.push_back(Vec3(p1, p2, p4));
+					g_trianglePoints.push_back(Vec3(p1, p3, p4));
+
+					AddTriangleToPoints(p1, index, index + 1);
+					AddTriangleToPoints(p2, index, -1);
+					AddTriangleToPoints(p3, index + 1, -1);
+					AddTriangleToPoints(p4, index, index + 1);
+					index += 2;
+
+					/*add end*/
+				}
+			}
+		}
+	}
+
+	// horizontal
+	for (int y = 0; y < dy; ++y)
+	{
+		for (int x = 0; x < dx; ++x)
+		{
+			int index0 = y*dx + x;
+
+			if (x > 0)
+			{
+				int index1 = y*dx + x - 1;
+				CreateSpring(baseIndex + index0, baseIndex + index1, stretchStiffness);
+			}
+
+			if (x > 1)
+			{
+				int index2 = y*dx + x - 2;
+				CreateSpring(baseIndex + index0, baseIndex + index2, bendStiffness);
+			}
+
+			if (y > 0 && x < dx - 1)
+			{
+				int indexDiag = (y - 1)*dx + x + 1;
+				CreateSpring(baseIndex + index0, baseIndex + indexDiag, shearStiffness);
+			}
+
+			if (y > 0 && x > 0)
+			{
+				int indexDiag = (y - 1)*dx + x - 1;
+				CreateSpring(baseIndex + index0, baseIndex + indexDiag, shearStiffness);
+			}
+		}
+	}
+
+	// vertical
+	for (int x = 0; x < dx; ++x)
+	{
+		for (int y = 0; y < dy; ++y)
+		{
+			int index0 = y*dx + x;
+
+			if (y > 0)
+			{
+				int index1 = (y - 1)*dx + x;
+				CreateSpring(baseIndex + index0, baseIndex + index1, stretchStiffness);
+			}
+
+			if (y > 1)
+			{
+				int index2 = (y - 2)*dx + x;
+				CreateSpring(baseIndex + index0, baseIndex + index2, bendStiffness);
+			}
+		}
+	}
+
+}
+
+
 
 /*add end*/
 

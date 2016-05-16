@@ -874,7 +874,7 @@ void GLUTUpdate()
 				//g_absorb = false;
 			}
 			else {
-				//test();
+				test();
 				g_maps.renewAbsorbing();
 			}
 		}
@@ -2667,6 +2667,7 @@ int main(int argc, char* argv[])
 	//g_scenes.push_back(new FluidClothCoupling("Fluid Cloth Coupling Goo", true));
 	//g_scenes.push_back(new BunnyBath("Bunny Bath Dam", true));
 
+	g_scenes.push_back(new ClothVerticle("ClothVerticle"));
 	g_scenes.push_back(new Cloth("Cloth"));
 
     // init gl
