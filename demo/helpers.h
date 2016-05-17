@@ -1836,15 +1836,15 @@ void test() {
 	//UpdateSaturations(31, Vec2(1, 1));
 	//UpdateSaturations(100, Vec2(1, 0));
 
-	float tmp = g_mDrip / 10;
-	for (int i = 0; i < 32; i++) {
-		for (int j = 0; j < 32; j++) {
-			g_maps.renewAbsorbing(i, j, Vec2(0, 0), tmp);
-			g_maps.renewAbsorbing(i, j, Vec2(0, 1), tmp);
-			g_maps.renewAbsorbing(i, j, Vec2(1, 0), tmp);
-			g_maps.renewAbsorbing(i, j, Vec2(1, 1), tmp);
-		}
-	}
+	//float tmp = g_mDrip / 10;
+	//for (int i = 0; i < 32; i++) {
+	//	for (int j = 0; j < 32; j++) {
+	//		g_maps.renewAbsorbing(i, j, Vec2(0, 0), tmp);
+	//		g_maps.renewAbsorbing(i, j, Vec2(0, 1), tmp);
+	//		g_maps.renewAbsorbing(i, j, Vec2(1, 0), tmp);
+	//		g_maps.renewAbsorbing(i, j, Vec2(1, 1), tmp);
+	//	}
+	//}
 
 	//float tmp = g_mDrip / 10;
 	//for (int i = 0; i < 32; i++) {
@@ -1865,6 +1865,27 @@ void test() {
 	//		g_maps.renewAbsorbing(i, j, Vec2(1, 1), tmp);
 	//	}
 	//}
+
+
+	//float tmp = g_mDrip / 20;
+	//int i = 31;
+	//for (int j = 0; j < 32; j++) {
+	//	g_maps.renewAbsorbing(i, j, Vec2(0, 0), tmp);
+	//	g_maps.renewAbsorbing(i, j, Vec2(0, 1), tmp);
+	//	g_maps.renewAbsorbing(i, j, Vec2(1, 0), tmp);
+	//	g_maps.renewAbsorbing(i, j, Vec2(1, 1), tmp);
+	//}
+
+	float tmp = g_mDrip / 20;
+	int j = 31;
+	for (int i = 0; i < 32; i++) {
+		g_maps.renewAbsorbing(i, j, Vec2(0, 0), tmp);
+		g_maps.renewAbsorbing(i, j, Vec2(0, 1), tmp);
+		g_maps.renewAbsorbing(i, j, Vec2(1, 0), tmp);
+		g_maps.renewAbsorbing(i, j, Vec2(1, 1), tmp);
+	}
+	
+
 }
 
 void Absorbing() {

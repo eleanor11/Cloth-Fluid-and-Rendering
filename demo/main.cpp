@@ -526,15 +526,15 @@ void Init(int scene, bool centerCamera=true)
 	g_colors.resize(0);
 
 	g_markColors.push_back(Vec4(0.0, 0.0, 1.0, 1.0));
-	g_markColors.push_back(Vec4(0.0, 0.25, 1.0, 1.0));
-	g_markColors.push_back(Vec4(0.0, 0.5, 1.0, 1.0));
+	g_markColors.push_back(Vec4(0.0, 0.33, 1.0, 1.0));
+	g_markColors.push_back(Vec4(0.0, 0.66, 1.0, 1.0));
 	g_markColors.push_back(Vec4(0.0, 1.0, 1.0, 1.0));
 	g_markColors.push_back(Vec4(0.0, 1.0, 0.5, 1.0));
 	g_markColors.push_back(Vec4(0.0, 1.0, 0.0, 1.0));
 	g_markColors.push_back(Vec4(0.5, 1.0, 0.0, 1.0));
 	g_markColors.push_back(Vec4(1.0, 1.0, 0.0, 1.0));
-	g_markColors.push_back(Vec4(1.0, 0.5, 0.0, 1.0));
-	g_markColors.push_back(Vec4(1.0, 0.0, 0.0, 1.0));
+	g_markColors.push_back(Vec4(1.0, 0.66, 0.0, 1.0));
+	g_markColors.push_back(Vec4(1.0, 0.33, 0.0, 1.0));
 	g_markColors.push_back(Vec4(1.0, 0.0, 0.0, 1.0));
 
 
