@@ -339,8 +339,9 @@ vec3 calSaturation(vec3 c, float saturation) {
 		switch (int(saturation * 10))
 		{
 		case 0:
-			float tmp = float(int(saturation * 100) % 10 + 1) / 10.0;
-			newc = vec3(0.0, tmp, 1.0);
+			//float tmp = float(int(saturation * 100) % 10 + 1) / 10.0;
+			//newc = vec3(0.0, tmp, 1.0);
+			newc = vec3(0.0, 0.0, 1.0);
 			break;
 		case 1:
 			newc = vec3(0.0, 1.0, 1.0);
@@ -378,8 +379,16 @@ vec3 calSaturation(vec3 c, float saturation) {
 		return newc;
 	}
 	//return c * (1.0 - saturation);
-	float tmp = 1.0 - saturation;
-	tmp = tmp * tmp; tmp = tmp * tmp * tmp;
+
+	//y = (1 - x) ^ 6
+	//float tmp = 1.0 - saturation;
+	//tmp = tmp * tmp; tmp = tmp * tmp * tmp;
+
+	float tmp = 2 * saturation - 1;
+	float tmp2 = tmp * tmp;
+	tmp = (1 - tmp2 * tmp2 * tmp) / 2;
+
+
 	return c * tmp;
 }
 
@@ -547,6 +556,7 @@ void main()
 		cc = calSaturation(cc, saturation);
 		//cr = cr * (1.0 - saturation);
 		//cc = cc * (1.0 - saturation);
+		
 		if (markFlag) {
 			if (bit == 0) {
 				color = cr;
@@ -561,6 +571,7 @@ void main()
 		else {
 			color = clothShader(cr, cc, normal, bit);
 		}
+
 		//color = texture2D(normalMap, gl_TexCoord[5].xy).xyz;
 
 	}
@@ -1124,7 +1135,7 @@ void MyDrawCloth(const Vec4* positions, const Vec4* colors, const Vec4* normals,
 
 	if (normalFlag) {
 		glUseProgram(s_diffuseProgram);
-		glUniform1i(glGetUniformLocation(s_diffuseProgram, "normal"), 1);
+		glUniform1i(glGetUniformLocation(s_diffuseProgram, "normalFlag"), 1);
 
 		GLint uTexB = glGetUniformLocation(s_diffuseProgram, "bitMap");
 		glUniform1i(uTexB, 2);
