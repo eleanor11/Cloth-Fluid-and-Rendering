@@ -2011,10 +2011,27 @@ void GLUTArrowKeysUp(int key, int x, int y)
 
 void GLUTKeyboardDown(unsigned char key, int x, int y)
 {
-	if (key > '0' && key <= '9')
-	{
-		g_scene = key-'0' - 1;
-		Init(g_scene);
+	//if (key > '0' && key <= '9')
+	//{
+	//	g_scene = key-'0' - 1;
+	//	Init(g_scene);
+	//	return;
+	//}
+
+	if (key == '0') {
+		g_camPos = Vec3(0.05f, 1.75f, 1.0f);
+		return;
+	}
+	if (key == '1') {
+		g_camPos = Vec3(0.14f, 1.2f, 0.65f);
+		return;
+	}
+	if (key == '2') {
+		g_camPos = Vec3(0.18f, 0.93f, 0.49f);
+		return;
+	}
+	if (key == '3') {
+		g_camPos = Vec3(0.19f, 0.87f, 0.45f);
 		return;
 	}
 
@@ -2666,6 +2683,9 @@ int main(int argc, char* argv[])
 	//g_scenes.push_back(new FluidClothCoupling("Fluid Cloth Coupling Water", false));
 	//g_scenes.push_back(new FluidClothCoupling("Fluid Cloth Coupling Goo", true));
 	//g_scenes.push_back(new BunnyBath("Bunny Bath Dam", true));
+
+	//for pictures
+	g_scenes.push_back(new ClothRendering("Cloth Rendering"));
 
 	g_scenes.push_back(new Cloth("Cloth with Shader"));
 	g_scenes.push_back(new Cloth0("Cloth without Shader"));

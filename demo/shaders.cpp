@@ -471,6 +471,131 @@ vec3 clothShader(vec3 cr, vec3 cc, float3 normal, float bit) {
  
 	return color;
 }
+//change fresnel and a
+vec3 clothShader1(vec3 cr, vec3 cc, float3 normal, float bit) {
+
+	//vec3 colorRow = vec3(0.7, 0.4, 0.4);
+	//vec3 colorCol = vec3(0.7, 0.4, 0.4);
+
+
+	float PI = 3.1415926535;
+
+	float3 t = float3(0.0, 0.0, 0.0);
+	float fresnelPow = a * 10;
+	float aa = 0.0;
+
+	float tmp = 0.2;
+	//if (bit == 0) {
+	if (bit < 0.5 - tmp) {
+		t = float3(1.0, 0.0, 0.0);
+		aa = fresnelPowRow / 10;
+		color = cr;
+	}
+	//else if (bit == 1) {
+	else if (bit > 0.5 + tmp) {
+		t = float3(0.0, 1.0, 0.0);
+		aa = fresnelPowCol / 10;
+		color = cc;
+	}
+
+	vec3 lDir = normalize(gl_TexCoord[3].xyz - (lightPos));
+	vec3 vDir = normalize(gl_ModelViewMatrixInverse[3].xyz - gl_TexCoord[3].xyz);
+
+	float LdotT = dot(lDir, t);
+	float RdotT = dot(vDir, t);
+	float LdotN = dot(lDir, normal);
+	float RdotN = dot(vDir, normal);
+
+	float thetaI = abs(PI / 2 - acos(LdotT));
+	float thetaR = abs(PI / 2 - acos(RdotT));
+
+	float3 n1 = cross(lDir, t);
+	float phiI = abs(PI / 2 - acos(dot(n1, normal)));
+	float3 n2 = cross(vDir, t);
+	float phiR = abs(PI / 2 - acos(dot(n2, normal)));
+
+	float phiD = phiI - phiR;
+	float thetaH = (thetaI + thetaR) / 2;
+	float thetaD = (thetaI - thetaR) / 2;
+
+	float FresnelR = pow(1 - max(0, acos(cos(thetaD) * cos(phiD / 2))), fresnelPow);
+	float gS = 1;
+	float fS = FresnelR * cos(phiD / 2) * gS;
+
+	float FresnelT = pow(1 - max(0, LdotN), fresnelPow);
+	float gV = 1;
+	float fV = FresnelT * ((1 - kd) * gV + kd) * aa / (cos(thetaI) + cos(thetaR));
+
+	float f = (fS + fV) / pow(cos(thetaD), 2);
+
+	color = color * f;
+
+	return color;
+}
+//change fresnel and a
+//add gaussian
+vec3 clothShader2(vec3 cr, vec3 cc, float3 normal, float bit) {
+
+	//vec3 colorRow = vec3(0.7, 0.4, 0.4);
+	//vec3 colorCol = vec3(0.7, 0.4, 0.4);
+
+
+	float PI = 3.1415926535;
+
+	float3 t = float3(0.0, 0.0, 0.0);
+	float fresnelPow = a * 10;
+	float aa = 0.0;
+
+	float tmp = 0.2;
+	//if (bit == 0) {
+	if (bit < 0.5 - tmp) {
+		t = float3(1.0, 0.0, 0.0);
+		aa = fresnelPowRow / 10;
+		color = cr;
+	}
+	//else if (bit == 1) {
+	else if (bit > 0.5 + tmp) {
+		t = float3(0.0, 1.0, 0.0);
+		aa = fresnelPowCol / 10;
+		color = cc;
+	}
+
+	vec3 lDir = normalize(gl_TexCoord[3].xyz - (lightPos));
+	vec3 vDir = normalize(gl_ModelViewMatrixInverse[3].xyz - gl_TexCoord[3].xyz);
+
+	float LdotT = dot(lDir, t);
+	float RdotT = dot(vDir, t);
+	float LdotN = dot(lDir, normal);
+	float RdotN = dot(vDir, normal);
+
+	float thetaI = abs(PI / 2 - acos(LdotT));
+	float thetaR = abs(PI / 2 - acos(RdotT));
+
+	float3 n1 = cross(lDir, t);
+	float phiI = abs(PI / 2 - acos(dot(n1, normal)));
+	float3 n2 = cross(vDir, t);
+	float phiR = abs(PI / 2 - acos(dot(n2, normal)));
+
+	float phiD = phiI - phiR;
+	float thetaH = (thetaI + thetaR) / 2;
+	float thetaD = (thetaI - thetaR) / 2;
+
+	float FresnelR = pow(1 - max(0, acos(cos(thetaD) * cos(phiD / 2))), fresnelPow);
+	float roughness = 0.5;
+	float gS = exp(-pow(thetaH / roughness, 2));
+	float fS = FresnelR * cos(phiD / 2) * gS;
+
+	float FresnelT = pow(1 - max(0, LdotN), fresnelPow);
+	float gaussianSigma = 0.5;
+	float gV = exp(-pow(thetaH / gaussianSigma, 2));
+	float fV = FresnelT * ((1 - kd) * gV + kd) * aa / (cos(thetaI) + cos(thetaR));
+
+	float f = (fS + fV) / pow(cos(thetaD), 2);
+
+	color = color * f;
+
+	return color;
+}
 
 void main()
 {
@@ -569,7 +694,12 @@ void main()
 			color = normalShader(cr, cc, normal, bit);
 		}
 		else {
-			color = clothShader(cr, cc, normal, bit);
+			
+			//color = clothShader(cr, cc, normal, bit);
+			
+			color = clothShader1(cr, cc, normal, bit);
+			/*gaussian*/
+			//color = clothShader2(cr, cc, normal, bit);
 		}
 
 		//color = texture2D(normalMap, gl_TexCoord[5].xy).xyz;
@@ -928,6 +1058,19 @@ int LoadGLTextures(const char *name, int idx){
 }
 bool loadNormalMap(std::string name) {
 	std::string path = "../../data/textures/";
+	//std::string path = "../../data/textures/128/";
+	std::string bname = path + "brc" + name + ".bmp";
+	std::string nname = path + "n" + name + ".bmp";
+	std::string sname = path + "s" + name + ".bmp";
+	bool result = LoadGLTextures(bname.c_str(), 1);
+	result = result && LoadGLTextures(nname.c_str(), 2);
+	result = result && LoadGLTextures(sname.c_str(), 3);
+
+	return result;
+}
+
+bool loadLineMap(std::string name) {
+	std::string path = "../../data/textures/line/";
 	std::string bname = path + "brc" + name + ".bmp";
 	std::string nname = path + "n" + name + ".bmp";
 	std::string sname = path + "s" + name + ".bmp";
@@ -960,6 +1103,16 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 
 	bool texFlag = LoadGLTextures("../../data/textures/mycloth.bmp", 0);
 	bool normalFlag = loadNormalMap(clothStyle);
+
+	//bool normalFlag = loadLineMap("LinenPlainLine");
+	//bool normalFlag = loadLineMap("CreprDeChineLineRow");
+	//bool normalFlag = loadLineMap("CreprDeChineLineCol");
+	//bool normalFlag = loadLineMap("PolyesterStainCharmeuseFrontRow");
+	//bool normalFlag = loadLineMap("PolyesterStainCharmeuseFrontCol");
+	//bool normalFlag = loadLineMap("PolyesterStainCharmeuseBackRow");
+	//bool normalFlag = loadLineMap("PolyesterStainCharmeuseBackCol");
+
+	
 	bool noiseFlag = LoadGLTextures("../../data/textures/noise.bmp", 4);
 	//bool normalFlag = loadNormalMap("LinenPlain");
 	//bool normalFlag = loadNormalMap("CreprDeChine");
