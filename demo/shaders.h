@@ -66,8 +66,8 @@ void UnbindSolidShader();
 
 /*added by eleanor*/
 void DrawClothColor(const Vec4* positions, const Vec4* colors, const Vec4* normals, const float* uvs, const int* indices, int numTris, int numPositions, int colorIndex = 3, float expand = 0.0f, bool twosided = true, bool smooth = true);
-void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, std::string clothStyle, int cshader_mode, float cshader_kd, float cshader_a, float cshader_fresnelPowRow, float cshader_fresnelPowCol, bool mark, bool texture, bool noise, Vec3 colorRow, Vec3 colorCol, float expand = 0.0f, bool twosided = true, bool smooth = true);
-void MyDrawCloth(const Vec4* positions, const Vec4* colors, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, std::string clothStyle, int cshader_mode, float cshader_kd, float cshader_a, float cshader_fresnelPowRow, float cshader_fresnelPowCol, float expand = 0.0f, bool twosided = true, bool smooth = true);
+void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, std::string clothStyle, int cshader_mode, float cshader_kd, float cshader_aRow, float cshader_aCol, float cshader_fresnelPowRow, float cshader_fresnelPowCol, bool mark, bool texture, bool noise, Vec3 colorRow, Vec3 colorCol, float expand = 0.0f, bool twosided = true, bool smooth = true);
+void MyDrawCloth(const Vec4* positions, const Vec4* colors, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, std::string clothStyle, int cshader_mode, float cshader_kd, float cshader_aRow, float cshader_aCol, float cshader_fresnelPowRow, float cshader_fresnelPowCol, float expand = 0.0f, bool twosided = true, bool smooth = true);
 /*add end*/
 
 // new fluid renderer

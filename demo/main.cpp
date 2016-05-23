@@ -161,7 +161,7 @@ float g_diffuseOutscatter;
 
 float g_dt = 1.0f/60.0f;	// the time delta used for simulation
 float g_realdt;				// the real world time delta 
-int g_scene = 0;
+int g_scene = 1;
 int g_selectedScene = g_scene;
 int g_levelScroll;			// offset for level selection scroll area
 
@@ -252,7 +252,8 @@ bool g_camInit = false;
 int g_shaderMode;
 
 float g_cshader_kd;
-float g_cshader_a;
+float g_cshader_aRow;
+float g_cshader_aCol;
 float g_cshader_fresnelPowRow;
 float g_cshader_fresnelPowCol;
 
@@ -576,7 +577,8 @@ void Init(int scene, bool centerCamera=true)
 	g_shaderMode = 1;
 
 	g_cshader_kd = 0.5;
-	g_cshader_a = 0.5;
+	g_cshader_aRow = 0.5;
+	g_cshader_aCol = 0.5;
 	g_cshader_fresnelPowRow = 5;
 	g_cshader_fresnelPowCol = 5;
 
@@ -1320,9 +1322,9 @@ void GLUTUpdate()
 		}
 		else {
 			//CalculateColors();
-			//MyDrawCloth(&g_positions[0], &g_colors[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_clothStyles[g_clothStyle], g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_expandCloth);
+			//MyDrawCloth(&g_positions[0], &g_colors[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_clothStyles[g_clothStyle], g_shaderMode, g_cshader_kd, g_cshader_aRow, g_cshader_aCol, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_expandCloth);
 			
-			MyDrawCloth(&g_positions[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_clothStyles[g_clothStyle], g_shaderMode, g_cshader_kd, g_cshader_a, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_markColor, g_texture, g_noise, g_clothColorRow, g_clothColorCol, g_expandCloth);
+			MyDrawCloth(&g_positions[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_clothStyles[g_clothStyle], g_shaderMode, g_cshader_kd, g_cshader_aRow, g_cshader_aCol, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_markColor, g_texture, g_noise, g_clothColorRow, g_clothColorCol, g_expandCloth);
 			BindSolidShader(g_lightPos, g_lightTarget, lightTransform, g_shadowTex, 0.0f, Vec4(g_clearColor, g_fogDistance));
 
 			}
@@ -2110,6 +2112,107 @@ void GLUTKeyboardDown(unsigned char key, int x, int y)
 			break;
 		}
 
+		case '6': {
+			if (g_scene == 0) {
+				int clothStart = 0;
+
+				int corner0 = clothStart + 0;
+				int corner1 = clothStart + g_dx - 1;
+				int corner2 = clothStart + g_dx * (g_dy - 1);
+				int corner3 = clothStart + g_dx * g_dy - 1;
+
+				float speed = kSpeed / 10;
+
+				g_positions[corner0] += Vec4(speed, 0.0, speed, 0.0);
+				g_positions[corner1] += Vec4(-speed, 0.0, speed, 0.0);
+				g_positions[corner2] += Vec4(speed, 0.0, -speed, 0.0);
+				g_positions[corner3] += Vec4(-speed, 0.0, -speed, 0.0);
+			}
+			if (g_scene == 1) {
+				int clothStart = 0;
+
+				int corner0 = clothStart + 0;
+				int corner1 = clothStart + g_dx - 1;
+
+				float speed = -kSpeed / 10;
+
+				g_positions[corner0] += Vec4(0.0, speed, 0.0, 0.0);
+				g_positions[corner1] += Vec4(0.0, speed, 0.0, 0.0);
+			}
+
+			break;
+		}
+
+		case '7': {
+			if (g_scene == 0) {
+				int clothStart = 0;
+
+				int corner0 = clothStart + 0;
+				int corner1 = clothStart + g_dx - 1;
+				int corner2 = clothStart + g_dx * (g_dy - 1);
+				int corner3 = clothStart + g_dx * g_dy - 1;
+
+				float speed = -kSpeed / 10;
+
+				g_positions[corner0] += Vec4(speed, 0.0, speed, 0.0);
+				g_positions[corner1] += Vec4(-speed, 0.0, speed, 0.0);
+				g_positions[corner2] += Vec4(speed, 0.0, -speed, 0.0);
+				g_positions[corner3] += Vec4(-speed, 0.0, -speed, 0.0);
+			}
+			if (g_scene == 1) {
+				int clothStart = 0;
+
+				int corner0 = clothStart + 0;
+				int corner1 = clothStart + g_dx - 1;
+
+				float speed = kSpeed / 10;
+
+				g_positions[corner0] += Vec4(0.0, speed, 0.0, 0.0);
+				g_positions[corner1] += Vec4(0.0, speed, 0.0, 0.0);
+			}
+			break;
+		}
+
+		case '8': {
+			if (g_scene == 0) {
+				int clothStart = 0;
+
+				int corner0 = clothStart + 0;
+				int corner1 = clothStart + g_dx - 1;
+				int corner2 = clothStart + g_dx * (g_dy - 1);
+				int corner3 = clothStart + g_dx * g_dy - 1;
+
+				float speed = kSpeed / 10;
+				//float hSpeed = speed / 2;
+
+				g_positions[corner0] += Vec4(0.0, speed, speed, 0.0);
+				g_positions[corner1] += Vec4(0.0, speed, speed, 0.0);
+				g_positions[corner2] += Vec4(0.0, -speed, -speed, 0.0);
+				g_positions[corner3] += Vec4(0.0, -speed, -speed, 0.0);
+			}
+			break;
+		}
+
+		case '9': {
+			if (g_scene == 0) {
+				int clothStart = 0;
+
+				int corner0 = clothStart + 0;
+				int corner1 = clothStart + g_dx - 1;
+				int corner2 = clothStart + g_dx * (g_dy - 1);
+				int corner3 = clothStart + g_dx * g_dy - 1;
+
+				float speed = -kSpeed / 10;
+				//float hSpeed = speed / 2;
+
+				g_positions[corner0] += Vec4(0.0, speed, speed, 0.0);
+				g_positions[corner1] += Vec4(0.0, speed, speed, 0.0);
+				g_positions[corner2] += Vec4(0.0, -speed, -speed, 0.0);
+				g_positions[corner3] += Vec4(0.0, -speed, -speed, 0.0);
+			}
+			break;
+		}
+
 		/*add end*/
 
 		case 'u':
@@ -2685,11 +2788,12 @@ int main(int argc, char* argv[])
 	//g_scenes.push_back(new BunnyBath("Bunny Bath Dam", true));
 
 	//for pictures
-	g_scenes.push_back(new ClothRendering("Cloth Rendering"));
+	//g_scenes.push_back(new ClothRendering("Cloth Rendering"));
 
 	g_scenes.push_back(new Cloth("Cloth with Shader"));
-	g_scenes.push_back(new Cloth0("Cloth without Shader"));
-	g_scenes.push_back(new ClothVerticle("Cloth Verticle"));
+	g_scenes.push_back(new ClothVerticle2("Cloth Verticle"));
+	//g_scenes.push_back(new ClothSimple("Cloth without Shader"));
+	
 
     // init gl
     glutInit(&argc, argv);

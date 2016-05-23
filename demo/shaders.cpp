@@ -266,7 +266,8 @@ uniform bool noiseFlag;
 uniform int shaderMode;
 
 uniform float kd;
-uniform float a;
+uniform float aRow;
+uniform float aCol;
 uniform float fresnelPowRow;
 uniform float fresnelPowCol;
 
@@ -378,16 +379,29 @@ vec3 calSaturation(vec3 c, float saturation) {
 		}
 		return newc;
 	}
-	//return c * (1.0 - saturation);
 
-	//y = (1 - x) ^ 6
+	/*linear*/
+	//float tmp = 1.0 - saturation;
+
+	/*method2*/
+	/*y = (1 - x) ^ 6*/
 	//float tmp = 1.0 - saturation;
 	//tmp = tmp * tmp; tmp = tmp * tmp * tmp;
 
-	float tmp = 2 * saturation - 1;
-	float tmp2 = tmp * tmp;
-	tmp = (1 - tmp2 * tmp2 * tmp) / 2;
+	/*method3*/
+	//float tmp = 2 * saturation - 1;
+	//float tmp3 = tmp * tmp * tmp;
+	//tmp = (1 - tmp3 * tmp3 * tmp) / 2;
 
+	/*method4*/
+	float tmp = 1 - saturation;
+	if (saturation < 0.22) {
+		float tmp3 = tmp * tmp * tmp;
+		tmp = (tmp3 * tmp3 * tmp) * 0.7 + 0.3;
+	}
+	else {
+		tmp = 0.51 * tmp;
+	}
 
 	return c * tmp;
 }
@@ -422,18 +436,21 @@ vec3 clothShader(vec3 cr, vec3 cc, float3 normal, float bit) {
 
 	float3 t = float3(0.0, 0.0, 0.0);
 	float fresnelPow = 0.0;
+	float a = 0.0;
 
 	float tmp = 0.2;
 	//if (bit == 0) {
 	if (bit < 0.5 - tmp) {
 		t = float3(1.0, 0.0, 0.0);
 		fresnelPow = fresnelPowRow;
+		a = aRow;
 		color = cr;
 	}
 	//else if (bit == 1) {
 	else if (bit > 0.5 + tmp) {
 		t = float3(0.0, 1.0, 0.0);
 		fresnelPow = fresnelPowCol;
+		a = aCol;
 		color = cc;
 	}
 
@@ -471,70 +488,9 @@ vec3 clothShader(vec3 cr, vec3 cc, float3 normal, float bit) {
  
 	return color;
 }
-//change fresnel and a
-vec3 clothShader1(vec3 cr, vec3 cc, float3 normal, float bit) {
 
-	//vec3 colorRow = vec3(0.7, 0.4, 0.4);
-	//vec3 colorCol = vec3(0.7, 0.4, 0.4);
-
-
-	float PI = 3.1415926535;
-
-	float3 t = float3(0.0, 0.0, 0.0);
-	float fresnelPow = a * 10;
-	float aa = 0.0;
-
-	float tmp = 0.2;
-	//if (bit == 0) {
-	if (bit < 0.5 - tmp) {
-		t = float3(1.0, 0.0, 0.0);
-		aa = fresnelPowRow / 10;
-		color = cr;
-	}
-	//else if (bit == 1) {
-	else if (bit > 0.5 + tmp) {
-		t = float3(0.0, 1.0, 0.0);
-		aa = fresnelPowCol / 10;
-		color = cc;
-	}
-
-	vec3 lDir = normalize(gl_TexCoord[3].xyz - (lightPos));
-	vec3 vDir = normalize(gl_ModelViewMatrixInverse[3].xyz - gl_TexCoord[3].xyz);
-
-	float LdotT = dot(lDir, t);
-	float RdotT = dot(vDir, t);
-	float LdotN = dot(lDir, normal);
-	float RdotN = dot(vDir, normal);
-
-	float thetaI = abs(PI / 2 - acos(LdotT));
-	float thetaR = abs(PI / 2 - acos(RdotT));
-
-	float3 n1 = cross(lDir, t);
-	float phiI = abs(PI / 2 - acos(dot(n1, normal)));
-	float3 n2 = cross(vDir, t);
-	float phiR = abs(PI / 2 - acos(dot(n2, normal)));
-
-	float phiD = phiI - phiR;
-	float thetaH = (thetaI + thetaR) / 2;
-	float thetaD = (thetaI - thetaR) / 2;
-
-	float FresnelR = pow(1 - max(0, acos(cos(thetaD) * cos(phiD / 2))), fresnelPow);
-	float gS = 1;
-	float fS = FresnelR * cos(phiD / 2) * gS;
-
-	float FresnelT = pow(1 - max(0, LdotN), fresnelPow);
-	float gV = 1;
-	float fV = FresnelT * ((1 - kd) * gV + kd) * aa / (cos(thetaI) + cos(thetaR));
-
-	float f = (fS + fV) / pow(cos(thetaD), 2);
-
-	color = color * f;
-
-	return color;
-}
-//change fresnel and a
 //add gaussian
-vec3 clothShader2(vec3 cr, vec3 cc, float3 normal, float bit) {
+vec3 clothShaderGaussian(vec3 cr, vec3 cc, float3 normal, float bit) {
 
 	//vec3 colorRow = vec3(0.7, 0.4, 0.4);
 	//vec3 colorCol = vec3(0.7, 0.4, 0.4);
@@ -543,20 +499,22 @@ vec3 clothShader2(vec3 cr, vec3 cc, float3 normal, float bit) {
 	float PI = 3.1415926535;
 
 	float3 t = float3(0.0, 0.0, 0.0);
-	float fresnelPow = a * 10;
-	float aa = 0.0;
+	float fresnelPow = 0.0;
+	float a = 0.0;
 
 	float tmp = 0.2;
 	//if (bit == 0) {
 	if (bit < 0.5 - tmp) {
 		t = float3(1.0, 0.0, 0.0);
-		aa = fresnelPowRow / 10;
+		fresnelPow = fresnelPowRow;
+		a = aRow;
 		color = cr;
 	}
 	//else if (bit == 1) {
 	else if (bit > 0.5 + tmp) {
 		t = float3(0.0, 1.0, 0.0);
-		aa = fresnelPowCol / 10;
+		fresnelPow = fresnelPowCol;
+		a = aCol;
 		color = cc;
 	}
 
@@ -588,7 +546,7 @@ vec3 clothShader2(vec3 cr, vec3 cc, float3 normal, float bit) {
 	float FresnelT = pow(1 - max(0, LdotN), fresnelPow);
 	float gaussianSigma = 0.5;
 	float gV = exp(-pow(thetaH / gaussianSigma, 2));
-	float fV = FresnelT * ((1 - kd) * gV + kd) * aa / (cos(thetaI) + cos(thetaR));
+	float fV = FresnelT * ((1 - kd) * gV + kd) * a / (cos(thetaI) + cos(thetaR));
 
 	float f = (fS + fV) / pow(cos(thetaD), 2);
 
@@ -695,11 +653,10 @@ void main()
 		}
 		else {
 			
-			//color = clothShader(cr, cc, normal, bit);
-			
-			color = clothShader1(cr, cc, normal, bit);
+			color = clothShader(cr, cc, normal, bit);
+		
 			/*gaussian*/
-			//color = clothShader2(cr, cc, normal, bit);
+			//color = clothShaderGaussian(cr, cc, normal, bit);
 		}
 
 		//color = texture2D(normalMap, gl_TexCoord[5].xy).xyz;
@@ -1081,7 +1038,7 @@ bool loadLineMap(std::string name) {
 	return result;
 }
 
-void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, std::string clothStyle, int cshader_mode, float cshader_kd, float cshader_a, float cshader_fresnelPowRow, float cshader_fresnelPowCol, bool mark, bool texture, bool noise, Vec3 colorRow, Vec3 colorCol, float expand, bool twosided, bool smooth)
+void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, std::string clothStyle, int cshader_mode, float cshader_kd, float cshader_aRow, float cshader_aCol, float cshader_fresnelPowRow, float cshader_fresnelPowCol, bool mark, bool texture, bool noise, Vec3 colorRow, Vec3 colorCol, float expand, bool twosided, bool smooth)
 {
 	if (!numTris)
 		return;
@@ -1178,7 +1135,8 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 		break;
 	case 2:
 		glUniform1f(glGetUniformLocation(s_diffuseProgram, "kd"), cshader_kd);
-		glUniform1f(glGetUniformLocation(s_diffuseProgram, "a"), cshader_a);
+		glUniform1f(glGetUniformLocation(s_diffuseProgram, "aRow"), cshader_aRow);
+		glUniform1f(glGetUniformLocation(s_diffuseProgram, "aCol"), cshader_aCol);
 		glUniform1f(glGetUniformLocation(s_diffuseProgram, "fresnelPowRow"), cshader_fresnelPowRow);
 		glUniform1f(glGetUniformLocation(s_diffuseProgram, "fresnelPowCol"), cshader_fresnelPowCol);
 		break;
@@ -1247,7 +1205,7 @@ void MyDrawCloth(const Vec4* positions, const Vec4* normals, const Vec3* uvs, co
 	}
 }
 
-void MyDrawCloth(const Vec4* positions, const Vec4* colors, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, std::string clothStyle, int cshader_mode, float cshader_kd, float cshader_a, float cshader_fresnelPowRow, float cshader_fresnelPowCol, float expand, bool twosided, bool smooth) {
+void MyDrawCloth(const Vec4* positions, const Vec4* colors, const Vec4* normals, const Vec3* uvs, const int* indices, int numTris, int numPositions, std::string clothStyle, int cshader_mode, float cshader_kd, float cshader_aRow, float cshader_aCol, float cshader_fresnelPowRow, float cshader_fresnelPowCol, float expand, bool twosided, bool smooth) {
 	if (!numTris)
 		return;
 
@@ -1312,7 +1270,8 @@ void MyDrawCloth(const Vec4* positions, const Vec4* colors, const Vec4* normals,
 		break;
 	case 2:
 		glUniform1f(glGetUniformLocation(s_diffuseProgram, "kd"), cshader_kd);
-		glUniform1f(glGetUniformLocation(s_diffuseProgram, "a"), cshader_a);
+		glUniform1f(glGetUniformLocation(s_diffuseProgram, "aRow"), cshader_aRow);
+		glUniform1f(glGetUniformLocation(s_diffuseProgram, "aCol"), cshader_aCol);
 		glUniform1f(glGetUniformLocation(s_diffuseProgram, "fresnelPowRow"), cshader_fresnelPowRow);
 		glUniform1f(glGetUniformLocation(s_diffuseProgram, "fresnelPowCol"), cshader_fresnelPowCol);
 		break;

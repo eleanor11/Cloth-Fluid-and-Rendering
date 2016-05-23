@@ -948,9 +948,9 @@ void CreateSpringGrid2(Vec3 lower, int dx, int dy, int dz, float radius, int pha
 				//g_uvs.push_back(Vec3((float)x / (dx - 1), (float)y / (dy - 1), 0.0));
 
 				//g_uvs.push_back(Vec3((float)x / dx * 16, (float)(dy - y) / dy * 16, 0.0));
-				g_uvs.push_back(Vec3((float)x / dx * 8, (float)(dy - y) / dy * 8, 0.0));
+				//g_uvs.push_back(Vec3((float)x / dx * 8, (float)(dy - y) / dy * 8, 0.0));
 				//g_uvs.push_back(Vec3((float)x / dx * 4, (float)(dy - y) / dy * 4, 0.0));
-				//g_uvs.push_back(Vec3((float)x / dx, (float)(dy - y) / dy, 0.0));
+				g_uvs.push_back(Vec3((float)x / dx, (float)(dy - y) / dy, 0.0));
 
 				int i = GridIndex(x, y, dx);
 				g_pointTriangleNums[i] = 0;
