@@ -6,7 +6,7 @@
 
 using namespace cv;
 
-const float MAXSATURATION = 10.0;
+const float MAXSATURATION = 5.0;
 const int DIMX = 32;
 const int DIMY = 32;
 
@@ -334,6 +334,11 @@ private:
 					continue;
 				}
 
+				tmp = rand() % 100;
+				if (g_scene == 1 && tmp >= 2) {
+					continue;
+				}
+
 				//fluid point i
 				g_positions[i] = g_positions[activeCount - 1];
 
@@ -584,6 +589,11 @@ private:
 	}
 
 	void createParticle(int index, int &activeCount) {
+
+		//cout << "Dripping\n";
+
+		//if (g_scene == 1) return;
+
 		Vec3 emitterDir = Vec3(0.0f, -1.0f, 0.0f);
 		Vec3 emitterRight = Vec3(-1.0f, 0.0f, 0.0f);
 

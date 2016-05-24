@@ -4058,6 +4058,10 @@ public:
 		//g_camPos = Vec3(0.05f, 1.75f, 1.0f);
 		//g_camAngle = Vec3(-0.25f, -1.0f, 0.0f);
 
+		/*focus on dripping*/
+		//g_camPos = Vec3(0.82f, 1.3f, 2.15f);
+		//g_camAngle = Vec3(0.22f, -0.4f, 0.0f);
+
 		g_dripBuffer.resize(0);
 		g_saturations.resize(0);
 		g_triangleCenters.resize(0);
@@ -4148,13 +4152,13 @@ public:
 		e.mDir = Normalize(Vec3(0.0f, -1.0f, 0.0f));
 		e.mEnabled = true;
 		//e.mPos = Vec3(-0.25f, 1.75f, 0.5f);
-		e.mPos = Vec3(0.3f, 1.25f, 0.3f);
+		e.mPos = Vec3(0.3f, 2.0f, 0.3f);
 		//e.mRight = Cross(e.mDir, Vec3(0.0f, 0.0f, 1.0f));
 		e.mRight = Cross(e.mDir, Vec3(0.0f, 0.0f, 1.0f));
 		e.mSpeed = (g_params.mFluidRestDistance / (g_dt * 2.0f));
 		e.mWidth = g_emitterWidth;
 
-		e.mWidth = 8;
+		e.mWidth = 5;
 
 		g_emitters.push_back(e);
 
@@ -4163,8 +4167,21 @@ public:
 		g_drawSprings = false;
 		g_drawEllipsoids = true;
 
+		//cloth option
+
+		g_clothStyle = 1;
+		g_cshader_fresnelPowRow = 5;
+		g_cshader_fresnelPowCol = 5;
+		g_cshader_aRow = 0.8;
+		g_cshader_aCol = 0.2;
+		g_maps.setName(g_clothStyles[g_clothStyle]);
+
 
 		/*test*/
+		if (1) {
+			g_maxSaturation = 3.0;
+		}
+
 		if (0) {
 			g_absorb = false;
 			g_diffuse = false;
@@ -4176,9 +4193,6 @@ public:
 		if (1) {
 			g_shaderMode = 2;
 
-		}
-		if (1) {
-			g_drip = false;
 		}
 		if (0) {
 			g_saturation = true;
@@ -4849,6 +4863,8 @@ public:
 
 		/*add begin*/
 
+		createFluids = true;
+
 		g_absorb = true;
 		g_diffuse = true;
 		g_drip = true;
@@ -4858,8 +4874,8 @@ public:
 
 		g_kAbsorption = 1.0;
 		g_kMaxAbsorption = 0.3;
-		g_kDiffusion = 0.3;
-		g_kDiffusionGravity = 0.2;
+		g_kDiffusion = 0.4;
+		g_kDiffusionGravity = 0.1;
 
 		g_camInit = false;
 		g_camPos = Vec3(0.5f, 0.75f, 2.2f);
@@ -4880,9 +4896,11 @@ public:
 		g_numTriangles = (dimx - 1) * (dimy - 1) * 2;
 		g_numPoints = dimx * dimy;
 
+		//g_lightDirection = Vec3(24, 15, 32);
+
 		/*add end*/
 
-
+		/*cloth*/
 		{
 			int clothStart = 0;
 
@@ -4890,7 +4908,7 @@ public:
 			//CreateSpringGrid2(Vec3(0.0f, 1.0f, 0.0f), dimx, dimy, 1, radius*0.25f, flexMakePhase(group++, 0), stretchStiffness, bendStiffness, shearStiffness, Vec3(0.0f), invmass);
 			CreateSpringGrid3(Vec3(0.0f, 1.25f, 0.0f), dimx, dimy, 1, radius*0.25f, flexMakePhase(group++, 0), stretchStiffness, bendStiffness, shearStiffness, Vec3(0.0f), invmass);
 
-			CalculateTriangleNeighbours();
+			//CalculateTriangleNeighbours();
 
 			int corner0 = clothStart + 0;
 			int corner1 = clothStart + dimx - 1;
@@ -4920,74 +4938,79 @@ public:
 
 		}
 
+		/*pool*/
+		{
+			Vec3 lower, upper;
+			GetParticleBounds(lower, upper);
 
-		Vec3 lower, upper;
-		GetParticleBounds(lower, upper);
+			Vec3 center = (lower + upper)*0.5f;
+			center.y = 0.0f;
 
-		Vec3 center = (lower + upper)*0.5f;
-		center.y = 0.0f;
+			//cout << center.x << ' ' << center.y << endl;
 
-		float width = (upper - lower).x;
-		float edge = 0.05f;
-		float height = 0.25f;
-		CreateConvex(Vec3(edge, height, width), center + Vec3(-width, height / 2.0f, 0.0f));
-		CreateConvex(Vec3(edge, height, width), center + Vec3(width, height / 2.0f, 0.0f));
-		CreateConvex(Vec3(width - edge, height, edge), center + Vec3(0.0f, height / 2.0f, width - edge));
-		CreateConvex(Vec3(width - edge, height, edge), center + Vec3(0.0f, height / 2.0f, -(width - edge)));
+			float width = 0.85;
+			float edge = 0.05f;
+			float height = 0.25f;
+
+			CreateConvex(Vec3(edge, height, width + edge), center + Vec3(-width, height / 2.0f, 0.0f));
+			CreateConvex(Vec3(edge, height, width + edge), center + Vec3(width, height / 2.0f, 0.0f));
+			CreateConvex(Vec3(width - edge, height, edge), center + Vec3(0.0f, height / 2.0f, width));
+			CreateConvex(Vec3(width - edge, height, edge), center + Vec3(0.0f, height / 2.0f, -width));
+		}
+
 
 		g_numSolidParticles = g_positions.size();
-		g_ior = 1.0f;
 
-		g_numExtraParticles = 64 * 1024;
+		/*fluid*/
+		{
 
-		g_params.mRadius = radius;
-		g_params.mFluid = true;
-		g_params.mNumIterations = 5;
-		g_params.mVorticityConfinement = 0.0f;
-		g_params.mAnisotropyScale = 30.0f;
-		g_params.mFluidRestDistance = g_params.mRadius*0.5f;
-		g_params.mSmoothing = 0.5f;
-		g_params.mSolidPressure = 0.25f;
-		g_numSubsteps = 3;
-		//g_params.mNumIterations = 6;
+			g_numExtraParticles = 64 * 1024;
 
-		g_params.mMaxVelocity = 0.5f*g_numSubsteps*g_params.mRadius / g_dt;
+			float restDistance = radius*0.55f;
+			//CreateParticleGrid2(Vec3(0.0f, 0.0f, 0.0f), 24, 5, 24, restDistance, Vec3(0.0f), 1.0f, false, 0.0f, flexMakePhase(group++, eFlexPhaseSelfCollide | eFlexPhaseFluid), 0.005f);
+			
+			g_lightDistance *= 0.5f;
 
-		g_maxDiffuseParticles = 32 * 1024;
-		g_diffuseScale = 0.5f;
-		g_lightDistance = 3.0f;
-		g_pointScale = 0.5f;
+			g_sceneLower = Vec3(0.0f);
 
-		g_params.mDynamicFriction = 0.125f;
-		g_params.mViscosity = 0.1f;
-		g_params.mCohesion = 0.0035f;
-		g_params.mViscosity = 4.0f;
+			g_numSubsteps = 2;
 
-		g_emitters[0].mEnabled = false;
+			g_params.mRadius = radius;
+			g_params.mDynamicFriction = 0.01f;
+			g_params.mFluid = true;
+			g_params.mViscosity = 2.0f;
+			g_params.mNumIterations = 4;
+			g_params.mVorticityConfinement = 40.0f;
+			g_params.mAnisotropyScale = 30.0f;
+			g_params.mFluidRestDistance = restDistance;
+			//g_params.mSolidPressure = 0.f;
+			//g_params.mRelaxationFactor = 0.0f;
+			//g_params.mCohesion = 0.02f;
+			//g_params.mCollisionDistance = 0.01f;
 
-		Emitter e;
-		//e.mDir = Normalize(Vec3(1.0f, 0.0f, 0.0f));
-		e.mDir = Normalize(Vec3(0.0f, -1.0f, 0.0f));
-		e.mEnabled = true;
-		//e.mPos = Vec3(-0.25f, 1.75f, 0.5f);
-		e.mPos = Vec3(0.3f, 1.25f, 0.3f);
-		//e.mRight = Cross(e.mDir, Vec3(0.0f, 0.0f, 1.0f));
-		e.mRight = Cross(e.mDir, Vec3(0.0f, 0.0f, 1.0f));
-		e.mSpeed = (g_params.mFluidRestDistance / (g_dt * 2.0f));
-		e.mWidth = g_emitterWidth;
+			//g_maxDiffuseParticles = 64 * 1024;
+			//g_diffuseScale = 0.5f;
 
-		e.mWidth = 8;
-
-		g_emitters.push_back(e);
+			//g_fluidColor = Vec4(0.113f, 0.425f, 0.55f, 1.f);
+		}
 
 		// draw options		
 		g_drawPoints = false;
 		g_drawSprings = false;
 		g_drawEllipsoids = true;
+		//g_drawDiffuse = true;
+
+		//cloth option
+		g_clothStyle = 1;
+		g_cshader_fresnelPowRow = 5;
+		g_cshader_fresnelPowCol = 5;
+		g_cshader_aRow = 0.8;
+		g_cshader_aCol = 0.2;
+		g_maps.setName(g_clothStyles[g_clothStyle]);
 
 
 		/*test*/
-		if (1) {
+		if (0) {
 			g_absorb = false;
 			g_diffuse = false;
 			g_drip = false;
@@ -4995,11 +5018,14 @@ public:
 			//g_saturations[0] = g_maxSaturation;
 			//g_saturations[1] = g_maxSaturation;
 		}
+		if (0) {
+			g_drip = false;
+		}
 		if (1) {
 			g_shaderMode = 2;
 
 		}
-		if (1) {
+		if (0) {
 			g_saturation = true;
 			g_maps.setMaxmap(g_saturation);
 		}
@@ -5034,7 +5060,7 @@ public:
 
 		imguiSlider("k Absorption", &g_kAbsorption, 0.0, 1.0, 0.1);
 		imguiSlider("k Diffusion", &g_kDiffusion, 0.0, 1.0, 0.1);
-		imguiSlider("k Diffusion Gravity", &g_kDiffusionGravity, 0.0, 1.0, 0.1);
+		imguiSlider("k Diffusion Gravity", &g_kDiffusionGravity, 0.0, 0.5, 0.01);
 
 		imguiSeparatorLine();
 

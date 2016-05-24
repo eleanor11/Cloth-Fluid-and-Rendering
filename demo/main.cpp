@@ -271,6 +271,8 @@ Maps g_maps;
 
 Vec3 g_lightDirection;
 
+bool createFluids;
+
 /*added end*/
 
 
@@ -562,7 +564,7 @@ void Init(int scene, bool centerCamera=true)
 	g_triangleNeighbours.resize(0);
 	g_triangleThetas.resize(0);
 
-	g_mDrip = 0.5;
+	g_mDrip = 1.0;
 	g_dripBuffer.resize(0);
 
 	g_absorb = false;
@@ -597,6 +599,8 @@ void Init(int scene, bool centerCamera=true)
 
 
 	g_lightDirection = Vec3(5.0f, 15.0f, 7.5f);
+
+	createFluids = false;
 
 	/*added end*/
 
@@ -859,9 +863,12 @@ void GLUTUpdate()
 
 	//printVec3(g_camPos);
 	//printVec3(g_camAngle);
+	//printVec3(g_lightDirection);
 	
 	if (!g_pause || g_step)	
 	{	
+		//g_pause = true;
+
 		float spin = DegToRad(15.0f);
 
 		const Vec3 forward(-sinf(g_camAngle.x+spin)*cosf(g_camAngle.y), sinf(g_camAngle.y), -cosf(g_camAngle.x+spin)*cosf(g_camAngle.y));
@@ -905,6 +912,12 @@ void GLUTUpdate()
 
 		if (g_shaderMode > 0 && (g_absorb || g_diffuse || g_drip)) {
 			g_maps.writeToFile();
+		}
+
+		if (createFluids) {
+			createFluids = false;
+			float group = 0;
+			CreateParticleGrid2(Vec3(-0.3625f, 0.0f, -0.75f), 31, 5, 31, 0.05f, Vec3(0.0f), 1.0f, false, 0.0f, flexMakePhase(group++, eFlexPhaseSelfCollide | eFlexPhaseFluid), 0.005f);
 		}
 
 		/*added end*/

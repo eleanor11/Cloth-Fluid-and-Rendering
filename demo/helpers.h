@@ -100,6 +100,36 @@ void CreateParticleGrid(Vec3 lower, int dimx, int dimy, int dimz, float radius, 
 	}
 }
 
+void CreateParticleGrid2(Vec3 lower, int dimx, int dimy, int dimz, float radius, Vec3 velocity, float invMass, bool rigid, float rigidStiffness, int phase, float jitter = 0.005f)
+{
+	int activeCount = flexGetActiveCount(g_flex);
+	for (int x = 0; x < dimx; ++x)
+	{
+		for (int y = 0; y < dimy; ++y)
+		{
+			for (int z = 0; z < dimz; ++z)
+			{
+				if (rigid)
+					g_rigidIndices.push_back(int(g_positions.size()));
+
+				Vec3 position = lower + Vec3(float(x), float(y), float(z))*radius + RandomUnitVector()*jitter;
+
+				g_positions[activeCount] = Vec4(position.x, position.y, position.z, invMass);
+				g_velocities[activeCount] = velocity;
+				g_phases[activeCount] = phase;
+
+				//g_positions.push_back(Vec4(position.x, position.y, position.z, invMass));
+				//g_velocities.push_back(velocity);
+				//g_phases.push_back(phase);
+
+				activeCount++;
+			}
+		}
+	}
+	flexSetActive(g_flex, &g_activeIndices[0], activeCount, eFlexMemoryHost);
+
+}
+
 void CreateParticleSphere(Vec3 center, int dim, float radius, Vec3 velocity, float invMass, bool rigid, float rigidStiffness, int phase, float jitter=0.005f)
 {
 	if (rigid && g_rigidIndices.empty())
@@ -383,6 +413,9 @@ void SkinMesh()
 
 void CreateConvex(Vec3 halfEdge = Vec3(2.0f), Vec3 center=Vec3(0.0f), Vec4 quat=Vec4(0.0f, 0.0f, 0.0f, 1.0f), int flags=0)
 {
+
+	//cout << halfEdge.x << ' '<< halfEdge.y << ' ' << halfEdge.z << endl;
+	//cout << center.x << ' '<< center.y << ' ' << center.z << endl;
 
 	if (LengthSq(center) == 0.0f)
 	{
@@ -1090,7 +1123,8 @@ void CreateSpringGrid3(Vec3 lower, int dx, int dy, int dz, float radius, int pha
 
 				//g_uvs.push_back(Vec3((float)x / dx * 16, (float)(dy - y) / dy * 16, 0.0));
 				//g_uvs.push_back(Vec3((float)x / dx * 8, (float)(dy - y) / dy * 8, 0.0));
-				//g_uvs.push_back(Vec3((float)x / dx * 4, (float)(dy - 1 - y) / dy * 4, 0.0));
+				//g_uvs.push_back(Vec3((float)x / dx * 4, (float)(dy - y) / dy * 4, 0.0));
+				//g_uvs.push_back(Vec3((float)x / dx * 2, (float)(dy - y) / dy * 2, 0.0));
 				g_uvs.push_back(Vec3((float)x / dx, (float)(dy - y) / dy, 0.0));
 
 				int i = GridIndex(x, y, dx);
