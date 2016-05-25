@@ -4011,7 +4011,224 @@ public:
 
 	bool mViscous;
 };
+//just shader, no fluid
+class ClothRendering : public Scene
+{
+public:
 
+	ClothRendering(const char* name) : Scene(name) {}
+
+	void Initialize()
+	{
+		float stretchStiffness = 1.0f;
+		float bendStiffness = 0.4f;
+		float shearStiffness = 0.4f;
+
+		int dimx = g_dx;
+		int dimy = g_dy;
+		//int dimx = 4;
+		//int dimy = 4;
+		float radius = 0.1f;
+		float invmass = 0.25f;
+		int group = 0;
+
+		/*add begin*/
+
+		g_absorb = true;
+		g_diffuse = true;
+		g_drip = true;
+		g_markColor = false;
+
+		g_emitterWidth = 3;
+
+		g_kAbsorption = 1.0;
+		g_kMaxAbsorption = 0.3;
+		g_kDiffusion = 0.3;
+		g_kDiffusionGravity = 0.2;
+
+		g_camInit = false;
+		g_camPos = Vec3(0.65f, 1.75f, 1.75f);
+		g_camAngle = Vec3(0.25f, -0.5f, 0.0f);
+
+		/*focus on cloth*/
+		//g_camPos = Vec3(0.5f, 1.25f, 1.0f);
+		//g_camAngle = Vec3(0.25f, -0.65f, 0.0f);
+
+		/*focus on line style*/
+		g_camPos = Vec3(0.05f, 1.75f, 1.0f);
+		g_camAngle = Vec3(-0.25f, -1.0f, 0.0f);
+
+		g_dripBuffer.resize(0);
+		g_saturations.resize(0);
+		g_triangleCenters.resize(0);
+		g_triangleNeighbours.resize(0);
+		g_triangleThetas.resize(0);
+		g_pointTriangleNums.resize(dimx * dimy);
+		g_pointTriangles.resize(dimx * dimy * 2);
+		g_trianglePoints.resize(0);
+
+		g_dx = dimx;
+		g_dy = dimy;
+
+		g_numTriangles = (dimx - 1) * (dimy - 1) * 2;
+		g_numPoints = dimx * dimy;
+
+		/*add end*/
+
+
+		{
+			int clothStart = 0;
+
+			//CreateSpringGrid(Vec3(0.0f, 1.0f, 0.0f), dimx, dimy, 1, radius*0.25f, flexMakePhase(group++, 0), stretchStiffness, bendStiffness, shearStiffness, Vec3(0.0f), invmass);
+			CreateSpringGrid2(Vec3(0.0f, 1.0f, 0.0f), dimx, dimy, 1, radius*0.25f, flexMakePhase(group++, 0), stretchStiffness, bendStiffness, shearStiffness, Vec3(0.0f), invmass);
+
+			CalculateTriangleNeighbours();
+
+			int corner0 = clothStart + 0;
+			int corner1 = clothStart + dimx - 1;
+			int corner2 = clothStart + dimx*(dimy - 1);
+			int corner3 = clothStart + dimx*dimy - 1;
+
+			g_positions[corner0].w = 0.0f;
+			g_positions[corner1].w = 0.0f;
+			g_positions[corner2].w = 0.0f;
+			g_positions[corner3].w = 0.0f;
+
+			// add tethers
+			for (int i = clothStart; i < int(g_positions.size()); ++i)
+			{
+
+				if (i != corner0 && i != corner1 && i != corner2 && i != corner3)
+				{
+					float stiffness = -0.5f;
+					float give = 0.05f;
+
+					CreateSpring(corner0, i, stiffness, give);
+					CreateSpring(corner1, i, stiffness, give);
+					CreateSpring(corner2, i, stiffness, give);
+					CreateSpring(corner3, i, stiffness, give);
+				}
+			}
+
+		}
+
+
+		g_numSolidParticles = g_positions.size();
+		g_ior = 1.0f;
+
+		g_numExtraParticles = 64 * 1024;
+
+		g_params.mRadius = radius;
+		g_params.mFluid = true;
+		g_params.mNumIterations = 5;
+		g_params.mVorticityConfinement = 0.0f;
+		g_params.mAnisotropyScale = 30.0f;
+		g_params.mFluidRestDistance = g_params.mRadius*0.5f;
+		g_params.mSmoothing = 0.5f;
+		g_params.mSolidPressure = 0.25f;
+		g_numSubsteps = 3;
+		//g_params.mNumIterations = 6;
+
+		g_params.mMaxVelocity = 0.5f*g_numSubsteps*g_params.mRadius / g_dt;
+
+		g_maxDiffuseParticles = 32 * 1024;
+		g_diffuseScale = 0.5f;
+		g_lightDistance = 3.0f;
+		g_pointScale = 0.5f;
+
+		g_params.mDynamicFriction = 0.125f;
+		g_params.mViscosity = 0.1f;
+		g_params.mCohesion = 0.0035f;
+		g_params.mViscosity = 4.0f;
+
+		// draw options		
+		g_drawPoints = false;
+		g_drawSprings = false;
+		g_drawEllipsoids = true;
+
+		g_absorb = false;
+		g_diffuse = false;
+		g_drip = false;
+
+		if (1) {
+			g_shaderMode = 2;
+			g_clothStyle = 0;
+			g_clothColor = Vec3(0.2, 0.4, 0.8);
+			g_clothColorRow = g_clothColor;
+			g_clothColorCol = g_clothColor;
+			g_cshader_aRow = 0.0;
+			g_cshader_aCol = 0.0;
+		}
+	}
+
+	virtual void DoGui(){
+
+
+		imguiLabel("Shader Control");
+
+		if (g_shaderMode == 2) {
+
+			imguiSlider("Fresnel Power Row", &g_cshader_fresnelPowRow, 0.1, 10.0, 0.5);
+			imguiSlider("Fresnel Power Col", &g_cshader_fresnelPowCol, 0.1, 10.0, 0.5);
+			imguiSlider("Kd", &g_cshader_kd, 0.0, 1.0, 0.1);
+			imguiSlider("A Row", &g_cshader_aRow, 0.0, 1.0, 0.1);
+			imguiSlider("A Col", &g_cshader_aRow, 0.0, 1.0, 0.1);
+
+			if (imguiCheck("LinenPlain", bool(g_clothStyle == 0))) {
+				g_clothStyle = 0;
+				g_clothColor = Vec3(0.2, 0.4, 0.8);
+				g_clothColorRow = g_clothColor;
+				g_clothColorCol = g_clothColor;
+				g_cshader_fresnelPowRow = 3;
+				g_cshader_fresnelPowCol = 3;
+				g_cshader_aRow = 0.0;
+				g_cshader_aCol = 0.0;
+				g_maps.setName(g_clothStyles[g_clothStyle]);
+			}
+			if (imguiCheck("CreprDeChine", bool(g_clothStyle == 1))) {
+				g_clothStyle = 1;
+				g_clothColor = Vec3(0.5, 0.7, 0.4);
+				g_clothColorRow = g_clothColor;
+				g_clothColorCol = g_clothColor;
+				g_cshader_fresnelPowRow = 5;
+				g_cshader_fresnelPowCol = 5;
+				g_cshader_aRow = 0.8;
+				g_cshader_aCol = 0.2;
+				g_maps.setName(g_clothStyles[g_clothStyle]);
+			}
+			if (imguiCheck("PolyesterStainCharmeuseFront", bool(g_clothStyle == 2))) {
+				g_clothStyle = 2;
+				g_clothColor = Vec3(0.5, 0.3, 0.4);
+				g_clothColorRow = g_clothColor;
+				g_clothColorCol = g_clothColor;
+				g_cshader_fresnelPowRow = 5;
+				g_cshader_fresnelPowCol = 5;
+				g_cshader_aRow = 0.2;
+				g_cshader_aCol = 0.6;
+				g_maps.setName(g_clothStyles[g_clothStyle]);
+			}
+			if (imguiCheck("PolyesterStainCharmeuseBack", bool(g_clothStyle == 3))) {
+				g_clothStyle = 3;
+				g_clothColor = Vec3(0.5, 0.3, 0.4);
+				g_clothColorRow = g_clothColor;
+				g_clothColorCol = g_clothColor;
+				g_cshader_fresnelPowRow = 5;
+				g_cshader_fresnelPowCol = 5;
+				g_cshader_aRow = 0.2;
+				g_cshader_aCol = 0.6;
+				g_maps.setName(g_clothStyles[g_clothStyle]);
+			}
+		}
+
+
+		imguiSeparatorLine();
+
+	}
+
+	bool mViscous;
+};
+
+//scene 1, cloth with shader
 class Cloth : public Scene
 {
 public:
@@ -4182,7 +4399,7 @@ public:
 			g_maxSaturation = 3.0;
 		}
 
-		if (0) {
+		if (1) {
 			g_absorb = false;
 			g_diffuse = false;
 			g_drip = false;
@@ -4331,6 +4548,7 @@ public:
 	bool mViscous;
 };
 
+//verticle cloth with shader
 class ClothVerticle : public Scene
 {
 public:
@@ -4627,225 +4845,14 @@ public:
 	bool mViscous;
 };
 
-class ClothRendering : public Scene
-{
-public:
 
-	ClothRendering(const char* name) : Scene(name) {}
-
-	void Initialize()
-	{
-		float stretchStiffness = 1.0f;
-		float bendStiffness = 0.4f;
-		float shearStiffness = 0.4f;
-
-		int dimx = g_dx;
-		int dimy = g_dy;
-		//int dimx = 4;
-		//int dimy = 4;
-		float radius = 0.1f;
-		float invmass = 0.25f;
-		int group = 0;
-
-		/*add begin*/
-
-		g_absorb = true;
-		g_diffuse = true;
-		g_drip = true;
-		g_markColor = false;
-
-		g_emitterWidth = 3;
-
-		g_kAbsorption = 1.0;
-		g_kMaxAbsorption = 0.3;
-		g_kDiffusion = 0.3;
-		g_kDiffusionGravity = 0.2;
-
-		g_camInit = false;
-		g_camPos = Vec3(0.65f, 1.75f, 1.75f);
-		g_camAngle = Vec3(0.25f, -0.5f, 0.0f);
-
-		/*focus on cloth*/
-		//g_camPos = Vec3(0.5f, 1.25f, 1.0f);
-		//g_camAngle = Vec3(0.25f, -0.65f, 0.0f);
-
-		/*focus on line style*/
-		g_camPos = Vec3(0.05f, 1.75f, 1.0f);
-		g_camAngle = Vec3(-0.25f, -1.0f, 0.0f);
-
-		g_dripBuffer.resize(0);
-		g_saturations.resize(0);
-		g_triangleCenters.resize(0);
-		g_triangleNeighbours.resize(0);
-		g_triangleThetas.resize(0);
-		g_pointTriangleNums.resize(dimx * dimy);
-		g_pointTriangles.resize(dimx * dimy * 2);
-		g_trianglePoints.resize(0);
-
-		g_dx = dimx;
-		g_dy = dimy;
-
-		g_numTriangles = (dimx - 1) * (dimy - 1) * 2;
-		g_numPoints = dimx * dimy;
-
-		/*add end*/
-
-
-		{
-			int clothStart = 0;
-
-			//CreateSpringGrid(Vec3(0.0f, 1.0f, 0.0f), dimx, dimy, 1, radius*0.25f, flexMakePhase(group++, 0), stretchStiffness, bendStiffness, shearStiffness, Vec3(0.0f), invmass);
-			CreateSpringGrid2(Vec3(0.0f, 1.0f, 0.0f), dimx, dimy, 1, radius*0.25f, flexMakePhase(group++, 0), stretchStiffness, bendStiffness, shearStiffness, Vec3(0.0f), invmass);
-
-			CalculateTriangleNeighbours();
-
-			int corner0 = clothStart + 0;
-			int corner1 = clothStart + dimx - 1;
-			int corner2 = clothStart + dimx*(dimy - 1);
-			int corner3 = clothStart + dimx*dimy - 1;
-
-			g_positions[corner0].w = 0.0f;
-			g_positions[corner1].w = 0.0f;
-			g_positions[corner2].w = 0.0f;
-			g_positions[corner3].w = 0.0f;
-
-			// add tethers
-			for (int i = clothStart; i < int(g_positions.size()); ++i)
-			{
-
-				if (i != corner0 && i != corner1 && i != corner2 && i != corner3)
-				{
-					float stiffness = -0.5f;
-					float give = 0.05f;
-
-					CreateSpring(corner0, i, stiffness, give);
-					CreateSpring(corner1, i, stiffness, give);
-					CreateSpring(corner2, i, stiffness, give);
-					CreateSpring(corner3, i, stiffness, give);
-				}
-			}
-
-		}
-
-
-		g_numSolidParticles = g_positions.size();
-		g_ior = 1.0f;
-
-		g_numExtraParticles = 64 * 1024;
-
-		g_params.mRadius = radius;
-		g_params.mFluid = true;
-		g_params.mNumIterations = 5;
-		g_params.mVorticityConfinement = 0.0f;
-		g_params.mAnisotropyScale = 30.0f;
-		g_params.mFluidRestDistance = g_params.mRadius*0.5f;
-		g_params.mSmoothing = 0.5f;
-		g_params.mSolidPressure = 0.25f;
-		g_numSubsteps = 3;
-		//g_params.mNumIterations = 6;
-
-		g_params.mMaxVelocity = 0.5f*g_numSubsteps*g_params.mRadius / g_dt;
-
-		g_maxDiffuseParticles = 32 * 1024;
-		g_diffuseScale = 0.5f;
-		g_lightDistance = 3.0f;
-		g_pointScale = 0.5f;
-
-		g_params.mDynamicFriction = 0.125f;
-		g_params.mViscosity = 0.1f;
-		g_params.mCohesion = 0.0035f;
-		g_params.mViscosity = 4.0f;
-
-		// draw options		
-		g_drawPoints = false;
-		g_drawSprings = false;
-		g_drawEllipsoids = true;
-
-
-		if (1) {
-			g_shaderMode = 2;
-			g_clothStyle = 0;
-			g_clothColor = Vec3(0.2, 0.4, 0.8);
-			g_clothColorRow = g_clothColor;
-			g_clothColorCol = g_clothColor;
-			g_cshader_aRow = 0.0;
-			g_cshader_aCol = 0.0;
-		}
-	}
-
-	virtual void DoGui(){
-
-
-		imguiLabel("Shader Control");
-
-		if (g_shaderMode == 2) {
-
-			imguiSlider("Fresnel Power Row", &g_cshader_fresnelPowRow, 0.1, 10.0, 0.5);
-			imguiSlider("Fresnel Power Col", &g_cshader_fresnelPowCol, 0.1, 10.0, 0.5);
-			imguiSlider("Kd", &g_cshader_kd, 0.0, 1.0, 0.1);
-			imguiSlider("A Row", &g_cshader_aRow, 0.0, 1.0, 0.1);
-			imguiSlider("A Col", &g_cshader_aRow, 0.0, 1.0, 0.1);
-
-			if (imguiCheck("LinenPlain", bool(g_clothStyle == 0))) {
-				g_clothStyle = 0;
-				g_clothColor = Vec3(0.2, 0.4, 0.8);
-				g_clothColorRow = g_clothColor;
-				g_clothColorCol = g_clothColor;
-				g_cshader_fresnelPowRow = 3;
-				g_cshader_fresnelPowCol = 3;
-				g_cshader_aRow = 0.0;
-				g_cshader_aCol = 0.0;
-				g_maps.setName(g_clothStyles[g_clothStyle]);
-			}
-			if (imguiCheck("CreprDeChine", bool(g_clothStyle == 1))) {
-				g_clothStyle = 1;
-				g_clothColor = Vec3(0.5, 0.7, 0.4);
-				g_clothColorRow = g_clothColor;
-				g_clothColorCol = g_clothColor;
-				g_cshader_fresnelPowRow = 5;
-				g_cshader_fresnelPowCol = 5;
-				g_cshader_aRow = 0.8;
-				g_cshader_aCol = 0.2;
-				g_maps.setName(g_clothStyles[g_clothStyle]);
-			}
-			if (imguiCheck("PolyesterStainCharmeuseFront", bool(g_clothStyle == 2))) {
-				g_clothStyle = 2;
-				g_clothColor = Vec3(0.5, 0.3, 0.4);
-				g_clothColorRow = g_clothColor;
-				g_clothColorCol = g_clothColor;
-				g_cshader_fresnelPowRow = 5;
-				g_cshader_fresnelPowCol = 5;
-				g_cshader_aRow = 0.2;
-				g_cshader_aCol = 0.6;
-				g_maps.setName(g_clothStyles[g_clothStyle]);
-			}
-			if (imguiCheck("PolyesterStainCharmeuseBack", bool(g_clothStyle == 3))) {
-				g_clothStyle = 3;
-				g_clothColor = Vec3(0.5, 0.3, 0.4);
-				g_clothColorRow = g_clothColor;
-				g_clothColorCol = g_clothColor;
-				g_cshader_fresnelPowRow = 5;
-				g_cshader_fresnelPowCol = 5;
-				g_cshader_aRow = 0.2;
-				g_cshader_aCol = 0.6;
-				g_maps.setName(g_clothStyles[g_clothStyle]);
-			}
-		}
-
-
-		imguiSeparatorLine();
-
-	}
-
-	bool mViscous;
-};
 
 //scene 2, verticle cloth with pool
-class ClothVerticle2 : public Scene
+class ClothWithPool : public Scene
 {
 public:
 
-	ClothVerticle2(const char* name) : Scene(name) {}
+	ClothWithPool(const char* name) : Scene(name) {}
 
 	void Initialize()
 	{

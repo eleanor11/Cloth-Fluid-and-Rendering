@@ -596,6 +596,7 @@ void Init(int scene, bool centerCamera=true)
 	g_clothStyles.push_back("PolyesterStainCharmeuseFront");
 	g_clothStyles.push_back("PolyesterStainCharmeuseBack");
 	g_maps = Maps(512, g_clothStyles[g_clothStyle]);
+	//g_maps = Maps(1024, g_clothStyles[g_clothStyle]);
 
 
 	g_lightDirection = Vec3(5.0f, 15.0f, 7.5f);
@@ -861,6 +862,8 @@ void GLUTUpdate()
 	g_realdt = float(currentTime-lastTime)*0.8f + g_realdt*0.2f;
 	lastTime = currentTime;
 
+	cout << "\n time:" << g_realdt << "\tPFS:" << 1 / g_realdt << endl;
+
 	//printVec3(g_camPos);
 	//printVec3(g_camAngle);
 	//printVec3(g_lightDirection);
@@ -875,7 +878,8 @@ void GLUTUpdate()
 		const Vec3 right(Normalize(Cross(forward, Vec3(0.0f, 1.0f, 0.0f))));
 
 		/*added by eleanor*/
-
+		double lTime = GetSeconds();
+		double cTime;
 		//absorb
 		if (g_absorb) {
 			if (g_shaderMode == 0) {
@@ -886,7 +890,15 @@ void GLUTUpdate()
 				//test();
 				g_maps.renewAbsorbing();
 			}
+			if (1) {
+
+				cTime = GetSeconds();
+				cout << "Absorb: " << float(cTime - lTime) << '\t';
+				lTime = cTime;
+			}
+
 		}
+
 		//diffuse
 		if (g_diffuse) {
 			if (g_shaderMode == 0) {
@@ -898,7 +910,13 @@ void GLUTUpdate()
 				CalculatePointThetas();
 				g_maps.renewDiffusing();
 			}
+			if (1) {
+				cTime = GetSeconds();
+				cout << "Diffuse: " << float(cTime - lTime) << '\t';
+				lTime = cTime;
+			}
 		}
+
 		//drip
 		if (g_drip) {
 			if (g_shaderMode == 0) {
@@ -907,6 +925,12 @@ void GLUTUpdate()
 			else {
 				g_maps.renewDripping();
 				//g_maps.renewDripping(1890);
+			}
+			if (1) {
+
+				cTime = GetSeconds();
+				cout << "Drip: " << float(cTime - lTime) << '\t';
+				lTime = cTime;
 			}
 		}
 
@@ -1006,6 +1030,12 @@ void GLUTUpdate()
 			}
 
 			flexSetActive(g_flex, &g_activeIndices[0], activeCount, eFlexMemoryHost);
+
+			if (1) {
+				cTime = GetSeconds();
+				cout << "\n emitter: " << float(cTime - lTime);
+				lTime = cTime;
+			}
 		}
 
 		// mouse picking
@@ -1337,8 +1367,12 @@ void GLUTUpdate()
 			//CalculateColors();
 			//MyDrawCloth(&g_positions[0], &g_colors[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_clothStyles[g_clothStyle], g_shaderMode, g_cshader_kd, g_cshader_aRow, g_cshader_aCol, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_expandCloth);
 			
+			//double lTime = GetSeconds();
+
 			MyDrawCloth(&g_positions[0], &g_normals[0], &g_uvs[0], &g_triangles[0], g_triangles.size() / 3, g_positions.size(), g_clothStyles[g_clothStyle], g_shaderMode, g_cshader_kd, g_cshader_aRow, g_cshader_aCol, g_cshader_fresnelPowRow, g_cshader_fresnelPowCol, g_markColor, g_texture, g_noise, g_clothColorRow, g_clothColorCol, g_expandCloth);
 			BindSolidShader(g_lightPos, g_lightTarget, lightTransform, g_shadowTex, 0.0f, Vec4(g_clearColor, g_fogDistance));
+
+			//cout << "\n drawcloth: " << GetSeconds() - lTime << endl;
 
 			}
 		}
@@ -2800,12 +2834,15 @@ int main(int argc, char* argv[])
 	//g_scenes.push_back(new FluidClothCoupling("Fluid Cloth Coupling Goo", true));
 	//g_scenes.push_back(new BunnyBath("Bunny Bath Dam", true));
 
-	//for pictures
-	//g_scenes.push_back(new ClothRendering("Cloth Rendering"));
+
 
 	g_scenes.push_back(new Cloth("Cloth with Shader"));
-	g_scenes.push_back(new ClothVerticle2("Cloth Verticle"));
+	g_scenes.push_back(new ClothWithPool("Cloth with Pool"));
+	
+	/*test*/
 	//g_scenes.push_back(new ClothSimple("Cloth without Shader"));
+	//for pictures
+	//g_scenes.push_back(new ClothRendering("Cloth Rendering"));
 	
 
     // init gl
