@@ -4026,8 +4026,8 @@ public:
 
 		int dimx = g_dx;
 		int dimy = g_dy;
-		//int dimx = 4;
-		//int dimy = 4;
+		//int dimx = 64;
+		//int dimy = 64;
 		float radius = 0.1f;
 		float invmass = 0.25f;
 		int group = 0;
@@ -4268,8 +4268,8 @@ public:
 		g_camAngle = Vec3(0.25f, -0.5f, 0.0f);
 
 		/*focus on cloth*/
-		//g_camPos = Vec3(0.5f, 1.25f, 1.0f);
-		//g_camAngle = Vec3(0.25f, -0.65f, 0.0f);
+		g_camPos = Vec3(0.5f, 1.25f, 1.0f);
+		g_camAngle = Vec3(0.25f, -0.65f, 0.0f);
 
 		/*focus on line style*/
 		//g_camPos = Vec3(0.05f, 1.75f, 1.0f);
@@ -4278,6 +4278,8 @@ public:
 		/*focus on dripping*/
 		//g_camPos = Vec3(0.82f, 1.3f, 2.15f);
 		//g_camAngle = Vec3(0.22f, -0.4f, 0.0f);
+		//g_camPos = Vec3(0.65f, 1.25f, 1.55f);
+		//g_camAngle = Vec3(0.3f, -0.5f, 0.0f);
 
 		g_dripBuffer.resize(0);
 		g_saturations.resize(0);

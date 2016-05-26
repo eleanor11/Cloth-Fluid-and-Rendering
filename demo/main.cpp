@@ -161,7 +161,7 @@ float g_diffuseOutscatter;
 
 float g_dt = 1.0f/60.0f;	// the time delta used for simulation
 float g_realdt;				// the real world time delta 
-int g_scene = 1;
+int g_scene = 0;
 int g_selectedScene = g_scene;
 int g_levelScroll;			// offset for level selection scroll area
 
@@ -862,7 +862,7 @@ void GLUTUpdate()
 	g_realdt = float(currentTime-lastTime)*0.8f + g_realdt*0.2f;
 	lastTime = currentTime;
 
-	cout << "\n time:" << g_realdt << "\tPFS:" << 1 / g_realdt << endl;
+	//cout << "\n time:" << g_realdt << "\tPFS:" << 1 / g_realdt << endl;
 
 	//printVec3(g_camPos);
 	//printVec3(g_camAngle);
@@ -883,6 +883,7 @@ void GLUTUpdate()
 		//absorb
 		if (g_absorb) {
 			if (g_shaderMode == 0) {
+			//if (g_shaderMode == -1) {
 				Absorbing();
 				//g_absorb = false;
 			}
@@ -890,7 +891,7 @@ void GLUTUpdate()
 				//test();
 				g_maps.renewAbsorbing();
 			}
-			if (1) {
+			if (0) {
 
 				cTime = GetSeconds();
 				cout << "Absorb: " << float(cTime - lTime) << '\t';
@@ -902,6 +903,7 @@ void GLUTUpdate()
 		//diffuse
 		if (g_diffuse) {
 			if (g_shaderMode == 0) {
+				//if (g_shaderMode == -1) {
 				CalculateTriangleCenters();
 				CalculateTriangleThetas();
 				Diffusing();
@@ -910,7 +912,7 @@ void GLUTUpdate()
 				CalculatePointThetas();
 				g_maps.renewDiffusing();
 			}
-			if (1) {
+			if (0) {
 				cTime = GetSeconds();
 				cout << "Diffuse: " << float(cTime - lTime) << '\t';
 				lTime = cTime;
@@ -920,13 +922,14 @@ void GLUTUpdate()
 		//drip
 		if (g_drip) {
 			if (g_shaderMode == 0) {
+				//if (g_shaderMode == -1) {
 				Dripping();
 			}
 			else {
 				g_maps.renewDripping();
 				//g_maps.renewDripping(1890);
 			}
-			if (1) {
+			if (0) {
 
 				cTime = GetSeconds();
 				cout << "Drip: " << float(cTime - lTime) << '\t';
@@ -935,6 +938,7 @@ void GLUTUpdate()
 		}
 
 		if (g_shaderMode > 0 && (g_absorb || g_diffuse || g_drip)) {
+		//if ((g_absorb || g_diffuse || g_drip)) {
 			g_maps.writeToFile();
 		}
 
@@ -1031,7 +1035,7 @@ void GLUTUpdate()
 
 			flexSetActive(g_flex, &g_activeIndices[0], activeCount, eFlexMemoryHost);
 
-			if (1) {
+			if (0) {
 				cTime = GetSeconds();
 				cout << "\n emitter: " << float(cTime - lTime);
 				lTime = cTime;
@@ -1360,8 +1364,13 @@ void GLUTUpdate()
 
 	if (g_drawCloth) {
 		if (g_shaderMode == 0) {
+
+			double lTime = GetSeconds();
+
 			CalculateColors();
 			DrawClothColor(&g_positions[0], &g_colors[0], &g_normals[0], g_uvs.size() ? &g_uvs[0].x : NULL, &g_triangles[0], g_triangles.size() / 3, g_positions.size(), 3, g_expandCloth);
+
+			cout << "\n drawcloth: " << GetSeconds() - lTime << endl;
 		}
 		else {
 			//CalculateColors();
@@ -2842,7 +2851,7 @@ int main(int argc, char* argv[])
 	/*test*/
 	//g_scenes.push_back(new ClothSimple("Cloth without Shader"));
 	//for pictures
-	//g_scenes.push_back(new ClothRendering("Cloth Rendering"));
+	g_scenes.push_back(new ClothRendering("Cloth Rendering"));
 	
 
     // init gl
